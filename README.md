@@ -6,6 +6,7 @@
 <p align="center">
 <a href="https://github.com/berkaysirtas/pixelBrain/releases/latest"><img alt="sürüm" src="https://img.shields.io/github/v/release/berkaysirtas/pixelBrain?label=s%C3%BCr%C3%BCm&color=9065B0"></a>
 <img alt="macOS" src="https://img.shields.io/badge/macOS-yerelde%20%C3%A7al%C4%B1%C5%9F%C4%B1r-37352F">
+<a href="https://github.com/berkaysirtas/pixelBrain/actions/workflows/denetim.yml"><img alt="denetim" src="https://github.com/berkaysirtas/pixelBrain/actions/workflows/denetim.yml/badge.svg"></a>
 <a href="LICENSE"><img alt="pixelBrain Lisansı" src="https://img.shields.io/badge/lisans-pixelBrain%20(Apache%202.0%20%2B%20ko%C5%9Fullar)-448361"></a>
 </p>
 
@@ -124,7 +125,8 @@ yeniden kurulabilen bir indeks; notların kendisi değil) ve Node.js varsa taray
 
 Program `motor/` (Python sunucu, tek dosya kabuk `beyin.html`, tuval), `araclar/` (duman sınamaları:
 `sh araclar/tum-duman.sh`) ve `hafiza/` (hafıza katmanının paketi). Şema ve tasarım kararları `BEYIN.md`, pano biçimi
-`PANO.md`. Sunucu yalnız Python standart kütüphanesiyle çalışır.
+`PANO.md`. Sunucu yalnız Python standart kütüphanesiyle çalışır. Katkı için [CONTRIBUTING.md](CONTRIBUTING.md), güvenlik açığı
+bildirimi için [SECURITY.md](SECURITY.md). Her gönderimde GitHub macOS'ta kurulumu ve açılışı denetler.
 
 ## Lisans
 

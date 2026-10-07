@@ -1,0 +1,15 @@
+name: Fikir ya da istek
+description: pixelBrain'de olmasını istediğin bir şey
+labels: [istek]
+body:
+  - type: textarea
+    id: sorun
+    attributes:
+      label: Hangi işini kolaylaştıracak?
+    validations:
+      required: true
+  - type: textarea
+    id: oneri
+    attributes:
+      label: Nasıl olsun?
+      description: Kabaca bir çizim ya da ekran görüntüsü varsa ekle.

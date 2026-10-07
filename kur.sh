@@ -50,9 +50,12 @@ if ! python3 hafiza/scripts/install_v3.py --vault "$HEDEF" --exclude-component l
   echo "Hafıza katmanı kurulamadı:"; tail -3 .durum/hafiza-kurulum.log; exit 1
 fi
 
-if command -v npm >/dev/null 2>&1; then
+if [ "${BEYIN_TARAYICI:-1}" = "0" ]; then
+  echo "Tarayıcı motoru atlandı (BEYIN_TARAYICI=0); panoların küçük resimleri çıkmaz."
+elif command -v npm >/dev/null 2>&1; then
   echo "Panoların küçük resimleri için tarayıcı motoru kuruluyor (bir kez)…"
-  if ! { npm install --silent --no-audit --no-fund >/dev/null 2>&1 && npx --yes playwright install chromium >/dev/null 2>&1; }; then
+  # Kilit dosyası yazılmaz: program dosyası değişmesin, güncellemede sahte çakışma çıkmasın
+  if ! { npm install --silent --no-audit --no-fund --no-package-lock >/dev/null 2>&1 && npx --yes playwright install chromium >/dev/null 2>&1; }; then
     echo "Not: Playwright kurulamadı, küçük resimler çıkmaz. Sonra: npm install && npx playwright install chromium"
   fi
 else

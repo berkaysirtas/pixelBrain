@@ -1,0 +1,29 @@
+name: Hata bildir
+description: Bir şey beklendiği gibi çalışmıyor
+labels: [hata]
+body:
+  - type: textarea
+    id: ne
+    attributes:
+      label: Ne oldu?
+      description: Ne yaptın, ne bekliyordun, ne oldu?
+    validations:
+      required: true
+  - type: textarea
+    id: adimlar
+    attributes:
+      label: Nasıl tekrarlanır?
+      placeholder: "1. ...\n2. ...\n3. ..."
+  - type: input
+    id: surum
+    attributes:
+      label: Sürüm
+      description: Ayarlar › Program › Sürüm kartında yazar (örneğin 0.1.5)
+    validations:
+      required: true
+  - type: textarea
+    id: hatalar
+    attributes:
+      label: Program hataları
+      description: Ayarlar › Program › Program · hatalar kartındaki son satırlar. Notlarından, kişisel bilgilerinden ya da tokenlarından hiçbir şey ekleme.
+      render: text

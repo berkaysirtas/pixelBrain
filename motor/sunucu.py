@@ -2381,6 +2381,18 @@ class Istek(BaseHTTPRequestHandler):
     def hata(self, kod, metin):
         self.gonder(kod, json.dumps({'hata': metin}, ensure_ascii=False).encode())
 
+    def yabanci(self, yazma):
+        """Başka bir sitenin tarayıcı üzerinden isteği reddedilir. Host yalnız 127.0.0.1 ya da localhost (DNS yeniden bağlamaya
+        karşı); tarayıcıdan gelen yazma istekleri ve /api okumaları yalnız Beyin'in kendi sayfasından (CSRF'ye karşı). Origin'siz
+        istekler (curl, Beyni Aç ve Kapat, sınamalar) tarayıcı dışıdır, geçer."""
+        kendi = (f'127.0.0.1:{PORT}', f'localhost:{PORT}')
+        if self.headers.get('Host', '') not in kendi:
+            return True
+        koken = self.headers.get('Origin')
+        if koken is not None and koken not in tuple('http://' + k for k in kendi):
+            return True
+        return (yazma or self.path.startswith('/api/')) and self.headers.get('Sec-Fetch-Site') == 'cross-site'
+
     def dosya(self, yol, tur=None, onbellek=False):
         try:
             with open(yol, 'rb') as f:
@@ -2411,6 +2423,8 @@ class Istek(BaseHTTPRequestHandler):
             return
 
     def do_GET(self):
+        if self.yabanci(False):
+            return self.hata(403, 'Bu istek Beyin\'in kendi sayfasından gelmiyor')
         yol = unquote(urlparse(self.path).path)
         sorgu = {k: v[0] for k, v in parse_qs(urlparse(self.path).query).items()}
         if yol in ('/', '/pano', '/tek.html'):
@@ -2557,6 +2571,8 @@ class Istek(BaseHTTPRequestHandler):
         self.hata(404, 'Adres yok')
 
     def do_POST(self):
+        if self.yabanci(True):
+            return self.hata(403, 'Bu istek Beyin\'in kendi sayfasından gelmiyor')
         yol = urlparse(self.path).path
         if yol == '/api/kapat':
             # Beyin'i kapatır (K-076; Ayarlar › Program ve "Beyni Kapat"): Codex turu sürüyorsa kesmemek için reddeder

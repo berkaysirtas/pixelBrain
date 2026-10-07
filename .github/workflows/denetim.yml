@@ -1,0 +1,44 @@
+# Her gönderimde macOS'ta: program bütünlüğü, derleme, güncelleyici sınaması, temiz kurulum ve açılış.
+# Yayınlayıcı (araclar/yayinla.py) bu denetim yeşil olmadan sürüm yayınlamaz.
+name: denetim
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Program bütünlüğü
+        run: |
+          python3 - <<'PY'
+          import hashlib, json
+          p = json.load(open('program.json'))
+          bozuk = [y for y, h in p['dosyalar'].items() if hashlib.sha256(open(y, 'rb').read()).hexdigest() != h]
+          print('pixelBrain', p['surum'], len(p['dosyalar']), 'dosya')
+          assert not bozuk, bozuk
+          PY
+      - name: Python derlemesi
+        run: python3 -m compileall -q motor araclar hafiza
+      - name: Güncelleyici sınaması
+        run: python3 araclar/guncelle-sinama.py
+      - name: Temiz kurulum ve açılış
+        env:
+          BEYIN_TARAYICI: '0'
+        run: |
+          KASA="$RUNNER_TEMP/kasa"
+          mkdir -p "$KASA" && cp -R . "$KASA/" && rm -rf "$KASA/.git"
+          cd "$KASA" && sh kur.sh
+          test -f .beyin-version && test -d ben
+          PORT=4790 nohup ./baslat.sh > sunucu.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:4790/api/surum > surum.json && break; sleep 0.5; done
+          python3 -c "import json; s = json.load(open('surum.json')); p = json.load(open('program.json')); assert s['surum'] == p['surum'], s; print('açıldı', s['surum'])"
+          curl -sf http://127.0.0.1:4790/ | grep -q 'surum-hak'
+          curl -sf -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:4790/api/kapat
