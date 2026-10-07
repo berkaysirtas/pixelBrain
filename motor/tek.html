@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pano</title>
+<link rel="icon" href="/uygulama/ikon.svg" type="image/svg+xml">
+<style>
+:root{--zemin:#F3F3F0;--yuzey:#FFFFFF;--kenar:#E2E2DD;--yazi:#1C1C1A;--soluk:#6B6B66;--vurgu:#2F6BFF}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--zemin);color:var(--yazi);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,a{font:inherit;color:inherit}
+header{position:sticky;top:0;height:48px;display:flex;align-items:center;gap:12px;padding:0 12px;background:var(--yuzey);border-bottom:1px solid var(--kenar);z-index:5}
+.dugme{height:30px;padding:0 10px;display:inline-flex;align-items:center;border:1px solid var(--kenar);border-radius:8px;background:none;cursor:pointer;text-decoration:none;white-space:nowrap}
+.dugme:hover{background:var(--zemin)}
+.dugme[aria-pressed="true"]{background:var(--yazi);border-color:var(--yazi);color:#FFFFFF}
+h1{flex:1;min-width:0;margin:0;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grup{display:flex;gap:4px}
+main{padding:16px}
+#cerceve{margin:0 auto;position:relative;overflow:hidden;background:var(--yuzey);outline:1px solid var(--kenar)}
+iframe{position:absolute;top:0;left:0;border:0;transform-origin:0 0;background:var(--yuzey)}
+</style>
+</head>
+<body>
+<header>
+  <a class="dugme" id="don" href="/">← Tuvale dön</a>
+  <h1 id="baslik"></h1>
+  <div class="grup" role="group" aria-label="Boy">
+    <button class="dugme" type="button" data-kip="sigdir" aria-pressed="true">Pencereye sığdır</button>
+    <button class="dugme" type="button" data-kip="gercek" aria-pressed="false">Gerçek boy</button>
+  </div>
+</header>
+<main><div id="cerceve"><iframe id="pano" title="Pano"></iframe></div></main>
+<script>
+// Tek pano: panolardaki ↗ buraya açar. "Pencereye sığdır" panoyu kaydırmadan görünecek boya ölçekler: genişlik ve
+// yükseklik birlikte. Uzun (kaydırmalı) panoda bir ekran boyu sığar (panolardaki gibi), gerisi kaydırınca görünür.
+const ad = new URLSearchParams(location.search).get('pano') || '';
+const cerceve = document.getElementById('cerceve'), pano = document.getElementById('pano');
+let kip = 'sigdir', b = null;
+try { kip = localStorage.getItem('beyin:tek-kip') || 'sigdir'; } catch {}
+
+function ekranBoyu(w) { return w <= 600 ? 844 : w <= 1100 ? 1180 : 900; }
+
+function ciz() {
+  if (!b) return;
+  const z = kip === 'gercek' ? 1 : Math.min((innerWidth - 32) / b.w, (innerHeight - 48 - 32) / Math.min(b.h, ekranBoyu(b.w)));
+  Object.assign(pano.style, { width: b.w + 'px', height: b.h + 'px', transform: `scale(${z})` });
+  Object.assign(cerceve.style, { width: b.w * z + 'px', height: b.h * z + 'px' });
+  document.querySelectorAll('[data-kip]').forEach((d) => d.setAttribute('aria-pressed', String(d.dataset.kip === kip)));
+}
+
+document.querySelectorAll('[data-kip]').forEach((d) => d.addEventListener('click', () => {
+  kip = d.dataset.kip;
+  try { localStorage.setItem('beyin:tek-kip', kip); } catch {}
+  ciz();
+}));
+addEventListener('resize', ciz);
+
+pano.addEventListener('load', () => {
+  let doc = null;
+  try { doc = pano.contentDocument; } catch { return; }
+  // Başka panoya giden bağlantı bu sayfada o panoyu açar
+  doc.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    const m = a && (a.getAttribute('href') || '').match(/([A-Za-z0-9_][A-Za-z0-9_.-]*\.dc\.html)/);
+    if (m) { e.preventDefault(); location.search = '?pano=' + encodeURIComponent(m[1]); }
+  }, true);
+});
+
+(async () => {
+  try {
+    const c = await (await fetch('/project/canvas.json', { cache: 'no-store' })).json();
+    b = c.boards[ad];
+    if (!b) throw new Error('Pano bulunamadı: ' + ad);
+    document.title = b.title || ad;
+    document.getElementById('baslik').textContent = b.title || ad;
+    document.getElementById('don').href = '/#' + (b.page || 'page-1') + '/' + encodeURIComponent(ad);
+    pano.title = b.title || ad;
+    pano.src = '/project/' + ad;
+    ciz();
+  } catch (hata) {
+    document.getElementById('baslik').textContent = hata.message;
+  }
+})();
+</script>
+</body>
+</html>

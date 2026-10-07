@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beyin kapalı</title>
+<link rel="icon" href="/uygulama/ikon.svg" type="image/svg+xml">
+<style>
+:root{--zemin:#FFFFFF;--yazi:#37352F;--soluk:#787774;--kenar:#EDEDEB;--kod:#F7F6F3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--zemin:#191919;--yazi:#E6E6E4;--soluk:#9B9A97;--kenar:#2F2F2F;--kod:#252525}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;background:var(--zemin);color:var(--yazi);font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif}
+main{max-width:420px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+img{width:56px;height:56px}
+h1{margin:4px 0 0;font-size:20px}
+p{margin:0;color:var(--soluk)}
+code{display:block;width:100%;padding:10px 12px;border:1px solid var(--kenar);border-radius:8px;background:var(--kod);font:13px ui-monospace,Menlo,monospace;text-align:left;overflow-wrap:anywhere}
+button{height:32px;padding:0 14px;border:0;border-radius:6px;background:var(--yazi);color:var(--zemin);font:inherit;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+<img src="/uygulama/ikon.svg" alt="">
+<h1>Beyin kapalı</h1>
+<p>Açmak için Beyin klasöründeki <b>Beyni Aç</b> dosyasına çift tıkla, sonra yeniden dene.</p>
+<button type="button" onclick="location.reload()">Yeniden dene</button>
+</main>
+</body>
+</html>

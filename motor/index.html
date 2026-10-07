@@ -1,0 +1,1357 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{BEYIN_AD}}</title>
+<link rel="icon" href="/uygulama/ikon.svg" type="image/svg+xml">
+<style>
+/* Basma hissi (K-037) */
+button{transition:transform 90ms ease,box-shadow 90ms ease,background-color .12s,color .12s}
+button:not(:disabled):active{transform:translateY(.5px) scale(.96)}
+/* Renkler panolar/tema.css ile aynı: açık ve sıcak. Sistem koyu temada olsa da açık kalır (tema kararı). */
+:root{--tuval:#E9E6DD;--nokta:#C9C5B8;--yuzey:#FFFFFF;--yuzey-2:#F4F2EC;--menu:#FFFFFF;--kenar:rgba(26,26,28,.10);--kenar-guclu:rgba(26,26,28,.20);--yazi:#1A1A1C;--soluk:#656568;--vurgu:#2F5BC4;--vurgu-zemin:rgba(47,91,196,.10);--canli:#1F7A4D;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--tuval);color:var(--yazi);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit;color:inherit}
+/* Kaydırma çubuğu kabukla aynı: ince, izsiz, üstüne gelince belirir */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background:transparent;border:3px solid transparent;border-radius:99px;background-clip:padding-box}
+:hover::-webkit-scrollbar-thumb{background-color:var(--kenar)}
+::-webkit-scrollbar-thumb:hover,::-webkit-scrollbar-thumb:active{background-color:var(--kenar-guclu)}
+header{position:fixed;top:0;left:0;right:0;height:48px;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--yuzey);border-bottom:1px solid var(--kenar);z-index:20}
+.marka{color:var(--soluk);white-space:nowrap;padding:0 4px}
+.bosluk-dol{flex:1}
+.dugme{height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;border-radius:8px;background:none;cursor:pointer;white-space:nowrap}
+.dugme:hover{background:var(--yuzey-2)}
+.dugme.cerceve{border-color:var(--kenar)}
+.sayfa-dugme{font-weight:600;font-size:14px}
+.sayfa-dugme svg{opacity:.6}
+.menu{position:absolute;top:40px;left:0;min-width:260px;padding:6px;background:var(--menu);border:1px solid var(--kenar-guclu);border-radius:12px;display:none;z-index:30}
+.menu.acik{display:block}
+.menu-oge{display:flex;align-items:center;gap:12px;width:100%;height:38px;padding:0 12px 0 36px;border:0;border-radius:8px;background:none;cursor:pointer;font-size:14px;text-align:left;position:relative}
+.menu-oge:hover,.menu-oge:focus-visible{background:var(--yuzey-2);outline:none}
+.menu-oge span{flex:1;white-space:nowrap}
+.menu-oge small{color:var(--soluk);font-variant-numeric:tabular-nums}
+.menu-oge[aria-current="page"]::before{content:"";position:absolute;left:14px;top:50%;width:10px;height:5px;border-left:2px solid var(--vurgu);border-bottom:2px solid var(--vurgu);transform:translateY(-70%) rotate(-45deg)}
+.sayfa-sec{position:relative}
+.ara{position:relative}
+.ara input{width:240px;height:30px;padding:0 10px;border:1px solid var(--kenar);border-radius:8px;background:var(--yuzey-2);outline:none}
+.ara input::placeholder{color:var(--soluk)}
+.ara input:focus{border-color:var(--vurgu)}
+.sonuclar{position:absolute;right:0;top:38px;width:460px;max-height:60vh;overflow:auto;background:var(--menu);border:1px solid var(--kenar-guclu);border-radius:12px;padding:6px;display:none}
+.sonuclar.acik{display:block}
+.sonuc{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:8px;background:none;cursor:pointer}
+.sonuc:hover,.sonuc[aria-selected="true"]{background:var(--yuzey-2)}
+.sonuc span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sonuc small{color:var(--soluk);white-space:nowrap}
+.yakinlik{display:flex;align-items:center;gap:2px}
+.yakinlik output{min-width:52px;text-align:center;font-variant-numeric:tabular-nums;color:var(--soluk)}
+#sahne{position:fixed;top:48px;left:0;right:0;bottom:0;overflow:hidden;touch-action:none;outline:none;background-image:radial-gradient(circle,var(--nokta) 1px,transparent 1.3px);background-size:24px 24px}
+/* Tuval zemini (Ayarlar › Görünüş): noktalı, düz ya da ızgara */
+[data-zemin="duz"] #sahne{background-image:none}
+[data-zemin="izgara"] #sahne{background-image:linear-gradient(var(--nokta) 1px,transparent 1px),linear-gradient(90deg,var(--nokta) 1px,transparent 1px)}
+#sahne.kayiyor{cursor:grabbing}
+#sahne.bosluk{cursor:grab}
+#dunya{position:absolute;left:0;top:0;transform-origin:0 0}
+.pano{position:absolute;background:#FFFFFF;outline:calc(1px / var(--z)) solid var(--kenar)}
+.pano.secili{outline:calc(2px / var(--z)) solid var(--vurgu)}
+.serit{position:absolute;left:0;bottom:100%;display:flex;align-items:center;gap:calc(6px / var(--z));max-width:100%;height:calc(24px / var(--z));padding-bottom:calc(4px / var(--z));font-size:calc(12px / var(--z));color:var(--soluk);white-space:nowrap;cursor:grab;user-select:none}
+.pano.secili .serit{color:var(--vurgu)}
+.serit b{font-weight:500;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.serit a{color:inherit;text-decoration:none;opacity:0;flex-shrink:0}
+.pano:hover .serit a,.pano.secili .serit a{opacity:1}
+.pano iframe,.pano img{position:absolute;top:0;left:0;width:100%;height:100%;border:0;display:block}
+.pano iframe{background:#FFFFFF}
+#sahne.kayiyor .pano iframe,#sahne.bosluk .pano iframe{pointer-events:none}
+.serit[hidden]{display:none}
+.pano .yer{position:absolute;top:0;left:0;right:0;bottom:0;display:grid;place-items:center;padding:10%;color:#6D6B67;font-size:calc(13px / var(--z));text-align:center}
+.yapiskan[data-dolgu="yellow"]{--d:#FFF7D1;--k:#F0E2A2}
+.metin-not{position:absolute;font-size:22px;line-height:1.35;white-space:pre;color:var(--yazi);cursor:move;user-select:none;min-width:24px;min-height:1.35em;padding:2px 4px;border-radius:4px}
+.sekil-not{position:absolute;display:grid;place-items:center;text-align:center;padding:12px;border:2px solid var(--yazi);border-radius:12px;background:var(--yuzey);color:var(--yazi);font-size:16px;line-height:1.35;cursor:move;user-select:none;white-space:pre-wrap;overflow:hidden}
+.sekil-not[data-sekil="daire"]{border-radius:50%}
+.bag-not{position:absolute;width:0;height:0;color:var(--yazi)}
+.bag-not svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.bag-not line{stroke:currentColor}.bag-not line.tut{stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:move}
+.bag-not.secili-not{color:var(--vurgu)}
+[data-not].secili-not:not(.bag-not){outline:2px solid var(--vurgu);outline-offset:4px}
+[data-not][contenteditable]{cursor:text;user-select:text;-webkit-user-select:text;outline:2px solid var(--vurgu);outline-offset:4px}
+#sahne.olustur{cursor:crosshair}
+/* Çizim C (tek tuval): Defter ve Bilgi panoların solunda birer sayfa; tıklayınca o sekme açılır */
+.sayfa-kart{position:absolute;width:680px;height:900px;padding:56px 56px 0;border-radius:14px;background:var(--yuzey);box-shadow:0 0 0 1px var(--kenar),0 18px 50px -30px rgba(55,53,47,.45);overflow:hidden;cursor:pointer;color:var(--yazi);font-size:19px;line-height:1.6}
+.sayfa-kart::after{content:'';position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(transparent,var(--yuzey))}
+.sayfa-kart:hover{box-shadow:0 0 0 2px var(--vurgu),0 18px 50px -30px rgba(55,53,47,.45)}
+.sayfa-kart>small{position:absolute;top:-40px;left:2px;font-size:22px;color:var(--soluk);white-space:nowrap}
+.sayfa-kart{overflow:visible}.sayfa-kart .ic{height:100%;overflow:hidden}
+.sayfa-kart h1{margin:0 0 22px;font-size:46px;letter-spacing:-.02em}.sayfa-kart h2{margin:24px 0 10px;font-size:25px}.sayfa-kart h3{margin:12px 0 6px;font-size:15px}
+.sayfa-kart p,.sayfa-kart li{margin:0 0 6px;color:var(--soluk)}.sayfa-kart ul{margin:0 0 8px;padding-left:20px}
+.sayfa-kart ul.yapilacak{list-style:none;padding-left:0}.sayfa-kart ul.yapilacak li::before{content:'☐';margin-right:10px}.sayfa-kart ul.yapilacak li.tamam{text-decoration:line-through;opacity:.7}.sayfa-kart ul.yapilacak li.tamam::before{content:'☑'}
+.oge-cubuk{position:fixed;z-index:30;display:flex;align-items:center;gap:2px;padding:4px;border-radius:10px;background:var(--yuzey);box-shadow:0 0 0 1px var(--kenar),0 8px 24px -10px rgba(55,53,47,.35);transform:translateX(-50%)}
+.oge-cubuk[hidden]{display:none}
+.oge-cubuk button{height:28px;min-width:28px;padding:0 8px;border:0;border-radius:7px;background:none;cursor:pointer;color:var(--soluk);font:inherit;font-size:12.5px;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.oge-cubuk button:hover{background:var(--yuzey-2);color:var(--yazi)}
+.oge-cubuk button[aria-pressed="true"]{background:var(--yuzey-2);color:var(--yazi)}
+.oge-cubuk .renk{min-width:22px;width:22px;padding:0}.oge-cubuk .renk i{width:14px;height:14px;border-radius:99px;background:var(--d);box-shadow:inset 0 0 0 1px var(--k)}
+.oge-cubuk .renk[aria-pressed="true"] i{box-shadow:inset 0 0 0 1px var(--k),0 0 0 2px var(--yuzey),0 0 0 3.5px var(--vurgu)}
+.oge-cubuk .sil:hover{color:#B91C1C}
+.oge-cubuk .ayrac{width:1px;height:18px;background:var(--kenar);margin:0 3px}
+.oge-cubuk svg{width:15px;height:15px}
+#geriAl:disabled,#ileriAl:disabled{opacity:.35;cursor:default}
+#bagOnizle{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;color:var(--vurgu)}
+.baslik-not{position:absolute;font-size:72px;font-weight:700;line-height:1.15;white-space:nowrap;color:var(--yazi);cursor:move;user-select:none}
+.yapiskan{--d:#F1F1EE;--k:#E0E0DA;position:absolute;padding:16px;background:var(--d);border:1px solid var(--k);border-radius:8px;white-space:pre-wrap;overflow:auto;color:#141413;cursor:move;user-select:none}
+.yapiskan[data-dolgu="blue"]{--d:#EAF1FF;--k:#C8DAFF}.yapiskan[data-dolgu="red"]{--d:#FDEDED;--k:#F6C9C9}.yapiskan[data-dolgu="orange"]{--d:#FFF2E5;--k:#FAD6B3}.yapiskan[data-dolgu="green"]{--d:#EAF7EF;--k:#BFE6CD}.yapiskan[data-dolgu="teal"]{--d:#E6F6F5;--k:#B8E3E0}.yapiskan[data-dolgu="purple"]{--d:#F1ECFF;--k:#D6CAFB}.yapiskan[data-dolgu="pink"]{--d:#FDEDF5;--k:#F5C8DF}
+.ipucu{position:fixed;left:12px;bottom:12px;max-width:calc(100% - 376px);padding:6px 10px;background:var(--menu);border:1px solid var(--kenar);border-radius:8px;color:var(--soluk);font-size:12px;z-index:5}
+#bildirim{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);padding:8px 14px;background:var(--yazi);color:var(--yuzey);border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+#bildirim.acik{opacity:1}
+/* Kabuğun içinde (beyin.html) başlıksız açılır: /pano?yalin=1#<sayfa> */
+.yalin .sayfa-sec,.yalin .marka,.yalin .bosluk-dol,.yalin .ipucu{display:none}.yalin #sahne{top:0}
+.araclar{display:none}
+.yalin .araclar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:5px;background:var(--yuzey);border:1px solid var(--kenar);border-radius:14px;box-shadow:0 10px 30px -12px rgba(26,26,28,.30),0 1px 2px rgba(26,26,28,.06);z-index:20}
+.arac{height:34px;min-width:34px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:9px;background:none;cursor:pointer;color:var(--soluk);font-size:12.5px;white-space:nowrap}
+.arac:hover{background:var(--yuzey-2);color:var(--yazi)}
+.arac[aria-pressed="true"]{background:var(--yazi);color:var(--yuzey)}
+.arac.arac-ciz[aria-pressed="true"]{background:var(--vurgu-zemin);color:var(--vurgu)}
+.arac.bekliyor{background:var(--vurgu-zemin);color:var(--vurgu)}
+.arac svg{width:17px;height:17px;flex-shrink:0}
+.arac-ayrac{width:1px;height:20px;background:var(--kenar);margin:0 4px}
+.arac-codex{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 10px 0 8px;margin-left:2px;border-radius:9px;background:var(--yuzey-2);font-size:12px;color:var(--yazi);max-width:220px}
+.arac-codex[hidden]{display:none}
+.arac-codex span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arac-codex i{width:7px;height:7px;border-radius:999px;background:var(--vurgu);animation:aracNefes 1.4s ease-in-out infinite;flex-shrink:0}
+@keyframes aracNefes{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1.1)}}
+#sahne.sor-bekliyor,#sahne.sor-bekliyor .pano{cursor:crosshair}
+.kutu{position:absolute;border:calc(1px / var(--z)) solid var(--vurgu);background:rgba(47,91,196,.06);pointer-events:none;z-index:4}
+.bolge{position:absolute;border:calc(1.5px / var(--z)) dashed var(--vurgu);background:rgba(47,91,196,.05);border-radius:calc(8px / var(--z));pointer-events:none;z-index:3}
+.bolge span{position:absolute;left:0;bottom:100%;margin-bottom:calc(6px / var(--z));font-size:calc(12px / var(--z));color:var(--vurgu);white-space:nowrap}
+.kutu[hidden],.bolge[hidden]{display:none}
+/* Codex'in gerçek yeri (K-039 adım 3): taslak yok. Okuduğu pano kesik çerçeve, yazdığı ya da revize ettiği pano dolu çerçeve
+   ve üstünde imleç; yeni pano diske düşünce kendi yerinde yukarıdan aşağı açılır */
+.pano.codex-okuyor{outline:calc(2px / var(--z)) dashed var(--vurgu);outline-offset:calc(5px / var(--z))}
+.pano.codex-yaziyor{outline:calc(2.5px / var(--z)) solid var(--vurgu);outline-offset:calc(5px / var(--z))}
+.codex-imlec{position:absolute;z-index:6;display:flex;align-items:flex-start;gap:calc(2px / var(--z));pointer-events:none;transition:left .45s ease,top .45s ease,opacity .3s}
+.codex-imlec[hidden]{display:none}
+.codex-imlec svg{width:calc(20px / var(--z));height:calc(20px / var(--z));flex-shrink:0;filter:drop-shadow(0 calc(2px / var(--z)) calc(3px / var(--z)) rgba(0,0,0,.25))}
+.codex-imlec span{margin-top:calc(14px / var(--z));font-size:calc(12px / var(--z));line-height:1;padding:calc(4px / var(--z)) calc(8px / var(--z));border-radius:calc(999px / var(--z));background:var(--vurgu);color:#FFFFFF;white-space:nowrap}
+.codex-imlec.okuyor span{background:var(--yuzey);color:var(--vurgu);box-shadow:0 0 0 calc(1px / var(--z)) var(--vurgu)}
+.pano.cizildi{animation:panoCizildi 1.3s cubic-bezier(.3,.7,.3,1)}
+/* Canlı çizim (K-077): Codex yazarken içerik panonun üstündeki ayrı çerçevede akar */
+.pano iframe.akis{z-index:2;pointer-events:none;background:transparent}
+.pano.akiyor{outline:calc(2.5px / var(--z)) solid var(--vurgu);outline-offset:calc(5px / var(--z))}
+.pano .akis-not{z-index:3;animation:akisNot 1.6s ease-in-out infinite}
+@keyframes akisNot{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.pano .akis-not{animation:none}}
+@keyframes panoCizildi{0%{clip-path:inset(0 0 100% 0);box-shadow:0 0 0 calc(6px / var(--z)) rgba(47,91,196,.4)}70%{clip-path:inset(0)}100%{clip-path:inset(0);box-shadow:0 0 0 0 rgba(47,91,196,0)}}
+.pano.guncellendi{animation:panoParla 1.4s ease-out}
+@keyframes panoParla{0%{box-shadow:0 0 0 calc(6px / var(--z)) rgba(47,91,196,.45)}100%{box-shadow:0 0 0 0 rgba(47,91,196,0)}}
+.yalin #bildirim{bottom:72px}
+/* Kabukta Notion sadeliği (K-023): açık gri tuval, ince araç çubuğu; arama ve yakınlık sol altta küçük, arama yalnız "/" ile açılır */
+.yalin{--tuval:#F7F7F5;--nokta:#DCDBD7;--yuzey-2:#F1F1EF;--kenar:rgba(55,53,47,.10);--yazi:#37352F;--soluk:#787774}
+/* Koyu tema (Ayarlar › Görünüş): kabuk iframe'e söyler; panolar kendi açık renklerinde kalır, çerçeve gibi */
+.yalin[data-tema="koyu"]{--tuval:#191919;--nokta:#3A3A38;--yuzey:#252525;--yuzey-2:#2C2C2B;--menu:#252525;--kenar:rgba(255,255,255,.10);--kenar-guclu:rgba(255,255,255,.22);--yazi:#E8E7E4;--soluk:#9B9A96;--vurgu:#6F95F0;--vurgu-zemin:rgba(111,149,240,.16);color-scheme:dark}
+.yalin[data-tema="koyu"] .yapiskan{color:#37352F}
+.yalin header{left:12px;right:auto;top:auto;bottom:16px;height:34px;padding:0 3px;gap:0;border:1px solid var(--kenar);border-radius:8px;background:var(--yuzey);box-shadow:0 4px 14px -8px rgba(55,53,47,.22)}
+.yalin .ara input{width:0;padding:0;border:0;background:none;transition:width .15s,padding .15s}
+.yalin .ara:focus-within input{width:190px;padding:0 10px;margin-right:4px;background:var(--yuzey-2)}
+.yalin .sonuclar{top:auto;bottom:40px;left:0;right:auto}
+.yalin .dugme{height:26px;padding:0 8px;font-size:12.5px;color:var(--soluk);border-radius:6px}.yalin .dugme.cerceve{border-color:transparent}
+.yalin .yakinlik output{min-width:42px;font-size:12px}
+.geri-hap{position:fixed;left:12px;bottom:58px;z-index:20;display:flex;gap:0;height:34px;padding:0 3px;align-items:center;border:1px solid var(--kenar);border-radius:8px;background:var(--yuzey);box-shadow:0 4px 14px -8px rgba(55,53,47,.22)}
+.geri-hap .dugme{height:26px;padding:0 7px;border:0;border-radius:6px;background:none;color:var(--soluk);cursor:pointer;display:grid;place-items:center}.geri-hap .dugme:hover:not(:disabled){background:var(--yuzey-2);color:var(--yazi)}
+.yalin #bildirim{bottom:104px}
+.yalin .araclar{bottom:16px;padding:4px;border-radius:10px;box-shadow:0 4px 18px -8px rgba(55,53,47,.25)}
+.yalin .arac{height:30px;min-width:30px;border-radius:7px;font-size:13px}
+.yalin .arac[aria-pressed="true"]{background:var(--yuzey-2);color:var(--yazi)}
+.yalin .arac.arac-ciz[aria-pressed="true"]{background:var(--vurgu-zemin);color:var(--vurgu)}
+/* Hızlı eylemler (K-038 adım 3): seçimin üstünde koyu çubuk */
+.eylem{position:fixed;z-index:22;display:flex;align-items:center;gap:2px;padding:4px;border-radius:10px;background:var(--yazi);color:var(--yuzey);box-shadow:0 8px 24px -10px rgba(26,26,28,.45);transform:translate(-50%,-100%);transition:opacity .12s}
+.eylem[hidden]{display:none}
+.eylem button{height:28px;padding:0 10px;border:0;border-radius:7px;background:none;color:inherit;font:inherit;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.eylem button:hover{background:rgba(255,255,255,.14)}
+.eylem button:disabled{opacity:.45;cursor:default;background:none}
+.eylem i{font-style:normal;opacity:.7}
+.eylem input{width:260px;height:28px;border:0;border-radius:7px;padding:0 10px;background:rgba(255,255,255,.12);color:inherit;font:inherit;font-size:12.5px;outline:none}
+.eylem input::placeholder{color:rgba(255,255,255,.55)}
+#sahne.kayiyor ~ .eylem{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="sayfa-sec">
+    <button class="dugme sayfa-dugme" id="sayfaDugme" type="button" aria-haspopup="menu" aria-expanded="false"><span id="sayfaAdi">Sayfa</span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="menu" id="sayfaMenu" role="menu" aria-label="Sayfalar"></div>
+  </div>
+  <div class="marka">{{BEYIN_AD}} · panolar</div>
+  <div class="bosluk-dol"></div>
+  <div class="ara">
+    <input id="ara" type="search" placeholder="Pano ara ( / )" aria-label="Pano ara" autocomplete="off">
+    <div id="sonuclar" class="sonuclar" role="listbox" aria-label="Arama sonuçları"></div>
+  </div>
+  <div class="yakinlik">
+    <button class="dugme" id="uzak" type="button" aria-label="Uzaklaştır">&minus;</button>
+    <output id="oran">%10</output>
+    <button class="dugme" id="yakin" type="button" aria-label="Yakınlaştır">+</button>
+    <button class="dugme cerceve" id="sigdir" type="button">Sığdır</button>
+  </div>
+</header>
+<div class="geri-hap" role="group" aria-label="Geri al, ileri al">
+    <button class="dugme" id="geriAl" type="button" title="Geri al (⌘Z)" aria-label="Geri al" disabled><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 4 2.5 7l3 3"/><path d="M2.5 7h7a4 4 0 0 1 0 8H8"/></svg></button>
+    <button class="dugme" id="ileriAl" type="button" title="İleri al (⇧⌘Z)" aria-label="İleri al" disabled><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 4l3 3-3 3"/><path d="M13.5 7h-7a4 4 0 0 0 0 8H8"/></svg></button>
+</div>
+<main id="sahne" tabindex="-1"><div id="dunya"></div></main>
+<div class="eylem" id="eylem" role="toolbar" aria-label="Seçim için hızlı eylemler" hidden></div>
+<div class="oge-cubuk" id="ogeCubuk" role="toolbar" aria-label="Seçili öğe" hidden></div>
+<div class="araclar" id="araclar" role="toolbar" aria-label="Araçlar">
+  <button class="arac" type="button" data-arac="sec" aria-pressed="true" title="Seç (Esc)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M3.5 2.5 12 8.2l-3.9.8-1.9 3.6z"/></svg></button>
+  <button class="arac" type="button" data-arac="el" aria-pressed="false" title="El: sürükleyerek gez (H · boşluk basılıyken de)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8V3.6a1 1 0 0 1 2 0V7.5M7.5 7V2.8a1 1 0 0 1 2 0V7M9.5 7V3.6a1 1 0 0 1 2 0V9.5c0 2.5-1.7 4-4 4-1.8 0-2.8-.8-3.8-2.3L2.4 8.8a1 1 0 0 1 1.6-1.2l1.5 1.6"/></svg></button>
+  <span class="arac-ayrac"></span>
+  <button class="arac" type="button" data-arac="not" aria-pressed="false" title="Not: tıkla, yapışkan not koy (N)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v7.5l-3.5 3.5H3z"/><path d="M13 10h-3.5v3.5"/></svg></button>
+  <button class="arac" type="button" data-arac="sekil" aria-pressed="false" title="Şekil: tıkla, kutu koy (R)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="6" height="6" rx="1"/><circle cx="11" cy="11" r="2.8"/></svg></button>
+  <button class="arac" type="button" data-arac="bag" aria-pressed="false" title="Bağ: sürükle, ok çiz (L)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 13 3M7 3h6v6"/></svg></button>
+  <button class="arac" type="button" data-arac="metin" aria-pressed="false" title="Metin: tıkla, yazı koy (T)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 3.5h9M8 3.5v9"/></svg></button>
+  <span class="arac-ayrac"></span>
+  <button class="arac" type="button" data-arac="sor" title="Codex'e sor: seçili panoyu bağlam yapar; seçili yoksa tıkladığın panoyu (C)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.2 9.3 6l3.9 1.3-3.9 1.3L8 12.4 6.7 8.6 2.8 7.3 6.7 6z"/><path d="M12.6 11.2v2.6M11.3 12.5h2.6"/></svg><span>Sor</span></button>
+  <button class="arac arac-ciz" type="button" data-arac="ciz" aria-pressed="false" title="Çizim modu: Codex her mesajda konuşulanı panoya çizer, sormadan (D)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 2.5 13.5 5.5 6 13H3v-3z"/><path d="m9 4 3 3"/></svg><span>Çiz</span></button>
+  <span class="arac-ayrac"></span>
+  <button class="arac" type="button" data-arac="veri" title="Veri ekle (V)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button>
+  <span class="arac-codex" id="aracCodex" hidden><i></i><span>Codex</span></span>
+</div>
+<div class="ipucu" id="ipucu">Kaydır: iki parmak ya da boşluğu sürükle · Yakınlaştır: sıkıştır ya da ⌘ + kaydır · Taşı: adından sürükle · Panolar canlı: içinde tıkla, yaz · Sığdır: 0 (seçili panoya, ikinci basış sayfaya)</div>
+<div id="bildirim" role="status"></div>
+<script>
+const YALIN = new URLSearchParams(location.search).has('yalin') && parent !== window;
+// Tuval hataları da program kaydına (K-028)
+addEventListener('error', (e) => fetch('/api/hata', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kaynak: 'tuval', mesaj: e.message, yer: `${e.filename || ''}:${e.lineno || ''}`, yigin: e.error?.stack || '' }) }).catch(() => {}));
+if (YALIN) document.documentElement.classList.add('yalin');
+const $ = (s) => document.querySelector(s);
+const sahne = $('#sahne'), dunya = $('#dunya');
+try {
+  document.documentElement.dataset.zemin = localStorage.getItem('beyin:gorunus:zemin') || 'nokta';
+  const tema = localStorage.getItem('beyin:gorunus:tema') || 'acik';
+  document.documentElement.dataset.tema = tema === 'koyu' || (tema === 'sistem' && matchMedia('(prefers-color-scheme: dark)').matches) ? 'koyu' : 'acik';
+} catch {}
+addEventListener('message', (e) => {
+  if (e.origin !== location.origin) return;
+  if (e.data?.beyin === 'zemin') document.documentElement.dataset.zemin = e.data.zemin;
+  if (e.data?.beyin === 'tema') document.documentElement.dataset.tema = e.data.tema;
+});
+const CANLI = 12;          // aynı anda canlı çizilen en çok pano
+const EN_AZ_GENISLIK = 180; // ekranda bundan dar pano küçük resimle gösterilir
+const ETIKET_EN_AZ = 110;   // ekranda bundan dar panonun adı gizlenir
+const BOY = { s: 14, m: 18, l: 24, xl: 32, xxl: 48 };
+
+let tuval = null, sayfa = null, g = { x: 40, y: 40, z: 0.1 };
+let durum = { canvas: 0, surum: {}, resim: {}, bekleyen: 0 };
+const ogeler = new Map(); // 'p:<dosya>' ya da 'n:<not>' -> öğe
+let secili = null, surukleme = null, bosluk = false, sunucuKapali = false;
+
+const depo = {
+  al(k) { try { return JSON.parse(localStorage.getItem('beyin:' + k)); } catch { return null; } },
+  koy(k, v) { try { localStorage.setItem('beyin:' + k, JSON.stringify(v)); } catch {} },
+};
+const sayfaOf = (o) => o.page || 'page-1';
+const kok = (ad) => ad.replace(/\.dc\.html$/, '');
+const kucuk = (s) => (s || '').toLocaleLowerCase('tr');
+
+function bildir(metin) {
+  const b = $('#bildirim');
+  b.textContent = metin;
+  b.classList.add('acik');
+  clearTimeout(bildir.t);
+  bildir.t = setTimeout(() => b.classList.remove('acik'), 2400);
+}
+
+async function tuvalOku() {
+  const r = await fetch('/project/canvas.json', { cache: 'no-store' });
+  if (!r.ok) throw new Error('canvas.json okunamadı');
+  const c = await r.json();
+  if (!c.pages || !c.pages.length) c.pages = [{ id: 'page-1', name: 'Tuval' }];
+  c.notes = c.notes || {};
+  return c;
+}
+
+/* ---------- sayfalar ---------- */
+function sayfalariCiz() {
+  const menu = $('#sayfaMenu');
+  menu.textContent = '';
+  const sayi = {};
+  for (const b of Object.values(tuval.boards)) sayi[sayfaOf(b)] = (sayi[sayfaOf(b)] || 0) + 1;
+  for (const p of tuval.pages) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'menu-oge';
+    b.setAttribute('role', 'menuitem');
+    const ad = document.createElement('span');
+    ad.textContent = p.name;
+    const n = document.createElement('small');
+    n.textContent = sayi[p.id] || 0;
+    b.append(ad, n);
+    if (p.id === sayfa) { b.setAttribute('aria-current', 'page'); $('#sayfaAdi').textContent = p.name; }
+    b.onclick = () => { menuKapat(); if (p.id !== sayfa) sayfaAc(p.id); };
+    menu.append(b);
+  }
+}
+
+function menuAc() {
+  $('#sayfaMenu').classList.add('acik');
+  $('#sayfaDugme').setAttribute('aria-expanded', 'true');
+  ($('#sayfaMenu [aria-current]') || $('#sayfaMenu button'))?.focus();
+}
+
+function menuKapat() {
+  $('#sayfaMenu').classList.remove('acik');
+  $('#sayfaDugme').setAttribute('aria-expanded', 'false');
+}
+
+$('#sayfaDugme').onclick = () => ($('#sayfaMenu').classList.contains('acik') ? menuKapat() : menuAc());
+addEventListener('pointerdown', (e) => { if (!e.target.closest('.sayfa-sec')) menuKapat(); });
+$('#sayfaMenu').addEventListener('keydown', (e) => {
+  const ogeler = [...$('#sayfaMenu').children], i = ogeler.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { ogeler[(i + 1) % ogeler.length].focus(); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { ogeler[(i - 1 + ogeler.length) % ogeler.length].focus(); e.preventDefault(); }
+  else if (e.key === 'Escape') { menuKapat(); $('#sayfaDugme').focus(); }
+  e.stopPropagation();
+});
+
+let otoSigdirma = 0;  // açılışta kendiliğinden sığdırıldı: sayfa kartları az sonra gelirse onlarla yeniden sığdırılır
+function sayfaAc(id, sigdirma) {
+  if (sayfa) depo.koy('gorunum:' + sayfa, g);
+  sayfa = id;
+  depo.koy('sayfa', id);
+  history.replaceState(null, '', '#' + id);
+  for (const o of ogeler.values()) o.el.remove();
+  ogeler.clear();
+  sayfalariCiz();
+  ogeleriKur();
+  if (sigdirma) return;
+  const kayitli = depo.al('gorunum:' + id);
+  // Kayıtlı görünüm boş bir yere düşüyorsa (pano silinmiş, taşınmış) sayfaya sığdır.
+  if (kayitli && gorunurPanoVar(kayitli)) { g = kayitli; uygula(); } else { sigdir(); otoSigdirma = Date.now(); }
+}
+
+function gorunurPanoVar(v) {
+  const W = sahne.clientWidth, H = sahne.clientHeight;
+  for (const o of ogeler.values()) {
+    const k = kutu(o), x = v.x + k.x * v.z, y = v.y + k.y * v.z;
+    if (x < W && y < H && x + k.w * v.z > 0 && y + k.h * v.z > 0) return true;
+  }
+  return false;
+}
+
+/* ---------- öğeler ---------- */
+function ogeleriKur() {
+  if (!$('#kutu')) dunya.insertAdjacentHTML('beforeend', '<div class="kutu" id="kutu" hidden></div><div class="bolge" id="bolge" hidden><span>Bölge · Sor ile Codex buraya çizer</span></div>');
+  const gerek = new Set();
+  const sira = [...new Set([...(tuval.order || []), ...Object.keys(tuval.boards)])];
+  for (const ad of sira) {
+    const b = tuval.boards[ad];
+    if (!b || sayfaOf(b) !== sayfa) continue;
+    const k = 'p:' + ad;
+    gerek.add(k);
+    let o = ogeler.get(k);
+    if (!o) { o = panoYap(ad); ogeler.set(k, o); dunya.append(o.el); }
+    o.veri = b;
+    panoKonum(o);
+  }
+  for (const [id, n] of Object.entries(tuval.notes)) {
+    if (sayfaOf(n) !== sayfa || !(n.kind === undefined || ['title1', 'metin', 'sekil', 'bag'].includes(n.kind))) continue;
+    const k = 'n:' + id;
+    gerek.add(k);
+    let o = ogeler.get(k);
+    if (!o) {
+      o = { el: document.createElement('div'), id, tur: 'not' };
+      o.el.dataset.not = id;
+      ogeler.set(k, o);
+      dunya.append(o.el);
+    }
+    o.veri = n;
+    notCiz(o);
+  }
+  for (const [k, o] of ogeler) if (!gerek.has(k)) { o.el.remove(); ogeler.delete(k); }
+  if (sayfaKartVeri.length) sayfaKartlari(sayfaKartVeri);
+  secimCiz();
+  canliPlanla();
+}
+
+function panoYap(ad) {
+  const el = document.createElement('div');
+  el.className = 'pano';
+  el.dataset.pano = ad;
+  const serit = document.createElement('div');
+  serit.className = 'serit';
+  const baslik = document.createElement('b');
+  const etiket = document.createElement('span');
+  etiket.className = 'etiket';
+  const ac = document.createElement('a');
+  ac.href = '/tek.html?pano=' + encodeURIComponent(ad);
+  ac.target = '_blank';
+  ac.rel = 'noopener';
+  ac.textContent = '↗';
+  ac.setAttribute('aria-label', 'Panoyu yeni sekmede tek başına aç');
+  serit.append(baslik, etiket, ac);
+  el.append(serit);
+  return { el, ad, tur: 'pano', serit, baslik, etiket, iframe: null, resim: null, yer: null, yuklenen: null };
+}
+
+function panoKonum(o) {
+  const b = o.veri;
+  Object.assign(o.el.style, { left: b.x + 'px', top: b.y + 'px', width: b.w + 'px', height: b.h + 'px' });
+  o.baslik.textContent = b.title || kok(o.ad);
+  o.serit.title = (b.title || '') + '  (' + o.ad + ')';
+  resimGuncelle(o);
+}
+
+function resimGuncelle(o) {
+  const v = durum.resim[o.ad];
+  if (v) {
+    if (!o.resim) {
+      o.resim = new Image();
+      o.resim.alt = '';
+      o.resim.decoding = 'async';
+      o.el.prepend(o.resim);
+    }
+    const src = '/resim/' + kok(o.ad) + '.png?v=' + v;
+    if (o.resim.getAttribute('src') !== src) o.resim.src = src;
+    if (o.yer) { o.yer.remove(); o.yer = null; }
+  } else if (!o.resim && !o.yer) {
+    o.yer = document.createElement('div');
+    o.yer.className = 'yer';
+    o.yer.textContent = 'Küçük resim hazırlanıyor';
+    o.el.prepend(o.yer);
+  }
+}
+
+// Araç çubuğu A (K-045): bağ ok, metin yalın yazı, şekil kutu ya da daire; seçili öğe çerçeveli
+const OK_SVG = (id, dx, dy) => `<svg width="1" height="1"><defs><marker id="ok-${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 1 10 5 0 9z" fill="currentColor"/></marker></defs>`
+  + `<line x1="0" y1="0" x2="${dx}" y2="${dy}" stroke-width="2" stroke-linecap="round" marker-end="url(#ok-${id})"/><line class="tut" x1="0" y1="0" x2="${dx}" y2="${dy}"/></svg>`;
+function notCiz(o) {
+  if (o.el.isContentEditable) return;  // düzenlenirken yeniden çizme
+  notCizIc(o);
+  o.el.classList.toggle('secili-not', notSecili === o.id);
+}
+function notCizIc(o) {
+  const n = o.veri, el = o.el;
+  if (n.kind === 'bag') {
+    el.className = 'bag-not'; el.style.left = n.x + 'px'; el.style.top = n.y + 'px';
+    el.innerHTML = OK_SVG(o.id, n.dx || 0, n.dy || 0);
+    return;
+  }
+  el.textContent = n.text || '';
+  if (n.kind === 'metin' || n.kind === 'sekil') {
+    el.className = n.kind + '-not'; el.style.left = n.x + 'px'; el.style.top = n.y + 'px';
+    if (n.kind === 'metin') el.style.fontSize = (n.size || 22) + 'px';
+    else { el.dataset.sekil = n.sekil || 'kare'; el.style.width = (n.w || 180) + 'px'; el.style.height = (n.h || 110) + 'px'; }
+    return;
+  }
+  el.style.left = n.x + 'px';
+  el.style.top = n.y + 'px';
+  if (n.kind === 'title1') {
+    el.className = 'baslik-not';
+    el.style.fontSize = '72px';
+    requestAnimationFrame(() => {
+      const m = n.maxW || Infinity;
+      if (el.scrollWidth > m) el.style.fontSize = (72 * m / el.scrollWidth) + 'px';
+    });
+  } else {
+    el.className = 'yapiskan';
+    el.dataset.dolgu = n.fill || n.color || 'gray';
+    const w = n.w || 240;
+    Object.assign(el.style, {
+      width: w + 'px', maxHeight: (n.maxH || w * 4 / 3) + 'px',
+      fontSize: (typeof n.size === 'number' ? n.size : BOY[n.size] || 18) + 'px',
+      fontWeight: n.bold ? '600' : '', fontStyle: n.italic ? 'italic' : '',
+    });
+  }
+}
+
+function kutu(o) {
+  const v = o.veri;
+  if (o.tur === 'pano') return { x: v.x, y: v.y - 40, w: v.w, h: v.h + 40 };
+  if (v.kind === 'title1') return { x: v.x, y: v.y, w: Math.min(v.maxW || 1200, 4000), h: 90 };
+  return { x: v.x, y: v.y, w: v.w || 240, h: v.maxH || (v.w || 240) * 4 / 3 };
+}
+
+/* ---------- görünüm ---------- */
+function uygula() {
+  dunya.style.transform = `translate(${g.x}px, ${g.y}px) scale(${g.z})`;
+  let aralik = 24 * g.z;
+  while (aralik < 14) aralik *= 2;
+  while (aralik > 56) aralik /= 2;
+  sahne.style.backgroundSize = `${aralik}px ${aralik}px`;
+  sahne.style.backgroundPosition = `${g.x % aralik}px ${g.y % aralik}px`;
+  eylemKonumla();
+  dunya.style.setProperty('--z', g.z);
+  $('#oran').textContent = '%' + Math.round(g.z * 100);
+  canliPlanla();
+  clearTimeout(uygula.t);
+  uygula.t = setTimeout(() => depo.koy('gorunum:' + sayfa, g), 300);
+}
+
+function yakinlas(k, cx, cy) {
+  const z = Math.min(4, Math.max(0.02, g.z * k));
+  if (cx === undefined) { cx = sahne.clientWidth / 2; cy = sahne.clientHeight / 2; }
+  g = { x: cx - (cx - g.x) * z / g.z, y: cy - (cy - g.y) * z / g.z, z };
+  uygula();
+}
+
+// Alttaki ipucu şeridi sahnenin üstünde durur; sığdırırken onun payı bırakılır.
+function hedef(k, pay) {
+  const ipucu = $('#ipucu');
+  // Kabukta üstte yol ve sekmeler, altta araç çubuğu yüzer: sığdırma ikisinin arasına yapılır, panoya binmezler
+  const ust = YALIN ? 56 : 0, alt = YALIN ? 64 : ipucu.offsetHeight ? ipucu.offsetHeight + 24 : 0;
+  const W = sahne.clientWidth, H = sahne.clientHeight - ust - alt;
+  const z = Math.min(4, Math.max(0.02, Math.min(W / k.w, H / k.h) * (pay || 0.92)));
+  return { x: (W - k.w * z) / 2 - k.x * z, y: ust + (H - k.h * z) / 2 - k.y * z, z };
+}
+
+function kutuyaSigdir(k, pay) {
+  g = hedef(k, pay);
+  uygula();
+}
+
+// Kaydırmalı uzun ekranda bütün pano değil bir ekran boyu sığar (telefon 844, tablet 1180, masaüstü 900);
+// gerisi kaydırınca görünür. Kısa pano olduğu gibi sığar.
+function ekranBoyu(w) { return w <= 600 ? 844 : w <= 1100 ? 1180 : 900; }
+function panoKutusu(b) { return { x: b.x, y: b.y - 40, w: b.w, h: Math.min(b.h, ekranBoyu(b.w)) + 40 }; }
+
+// Sığdır: seçili pano varsa önce ona, zaten ona sığdırılmışsa bütün sayfaya.
+function sigdir() {
+  const b = secili && tuval.boards[secili];
+  if (b && sayfaOf(b) === sayfa) {
+    const h = hedef(panoKutusu(b), 0.94);
+    if (Math.abs(h.z - g.z) > g.z * 0.01 || Math.abs(h.x - g.x) > 2 || Math.abs(h.y - g.y) > 2) return odakla(secili);
+  }
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const o of ogeler.values()) {
+    const k = kutu(o);
+    x0 = Math.min(x0, k.x); y0 = Math.min(y0, k.y);
+    x1 = Math.max(x1, k.x + k.w); y1 = Math.max(y1, k.y + k.h);
+  }
+  dunya.querySelectorAll('.sayfa-kart').forEach((el) => { const x = parseFloat(el.style.left), y = parseFloat(el.style.top); x0 = Math.min(x0, x); y0 = Math.min(y0, y - 40); x1 = Math.max(x1, x + 680); y1 = Math.max(y1, y + 900); });
+  if (x0 === Infinity) { g = { x: 80, y: 80, z: 1 }; return uygula(); }
+  kutuyaSigdir({ x: x0, y: y0, w: x1 - x0, h: y1 - y0 });
+}
+
+function odakla(ad) {
+  const b = tuval.boards[ad];
+  if (!b) return;
+  if (sayfaOf(b) !== sayfa) sayfaAc(sayfaOf(b), true);
+  secili = ad; // gidilen pano seçili olur
+  secim.clear(); secim.add(ad); bolge = null;
+  secimCiz();
+  kutuyaSigdir(panoKutusu(b), 0.94);
+}
+
+/* ---------- canlı çizim ---------- */
+function canliPlanla() {
+  clearTimeout(canliPlanla.t);
+  canliPlanla.t = setTimeout(canliGuncelle, 120);
+}
+
+function canliGuncelle() {
+  const W = sahne.clientWidth, H = sahne.clientHeight, aday = [];
+  for (const o of ogeler.values()) {
+    if (o.tur !== 'pano') continue;
+    const b = o.veri, sx = b.x * g.z + g.x, sy = b.y * g.z + g.y, sw = b.w * g.z, sh = b.h * g.z;
+    const gw = Math.min(sx + sw, W) - Math.max(sx, 0), gh = Math.min(sy + sh, H) - Math.max(sy, 0);
+    if (gw > 0 && gh > 0 && sw >= EN_AZ_GENISLIK) aday.push([gw * gh, o]);
+    // Etiket, pano ekranda onu taşıyacak kadar genişse görünür (uzaktan satır başlıkları yeter)
+    o.serit.hidden = sw < ETIKET_EN_AZ;
+  }
+  aday.sort((a, b) => b[0] - a[0]);
+  const canli = new Set(aday.slice(0, CANLI).map((a) => a[1]));
+  // Zaten canlı ve hâlâ görünen panoyu hemen kapatma (kaydırırken yanıp sönmesin)
+  for (const [, o] of aday) if (o.iframe && canli.size < CANLI + 4) canli.add(o);
+  for (const o of ogeler.values()) if (o.tur === 'pano') (canli.has(o) ? canliAc(o) : canliKapat(o));
+}
+
+function canliAc(o) {
+  const v = durum.surum[o.ad] || 0;
+  if (o.iframe && o.yuklenen === v) return;
+  if (!o.iframe) {
+    o.iframe = document.createElement('iframe');
+    o.iframe.title = o.veri.title || o.ad;
+    o.iframe.style.visibility = 'hidden';
+    o.iframe.onload = () => { if (o.iframe) { o.iframe.style.visibility = ''; icBagla(o); } };
+    o.el.insertBefore(o.iframe, o.serit);
+  }
+  o.yuklenen = v;
+  o.iframe.src = '/project/' + o.ad + '?v=' + v;
+}
+
+function canliKapat(o) {
+  if (!o.iframe) return;
+  o.iframe.remove();
+  o.iframe = null;
+  o.yuklenen = null;
+}
+
+// Panolar hep etkileşimli. Pano içinden: başka panoya giden bağlantı o panoya götürür, tıklama panoyu seçer,
+// kaydırma içeride kayacak yer yoksa tuvali kaydırır, sıkıştırma tuvali yakınlaştırır, kısayollar tuvale gider.
+function icBagla(o) {
+  let d = null;
+  try { d = o.iframe.contentDocument; } catch { return; }
+  if (!d) return;
+  d.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const m = (a.getAttribute('href') || '').match(/([A-Za-z0-9_][A-Za-z0-9_.-]*\.dc\.html)/);
+    if (m && tuval.boards[m[1]]) { e.preventDefault(); e.stopPropagation(); odakla(m[1]); }
+  }, true);
+  d.addEventListener('pointerdown', (e) => { menuKapat(); if (e.shiftKey) sec(o.ad, true); else if (!secim.has(o.ad) || secim.size > 1 || sorBekliyor) sec(o.ad); }, true);
+  d.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey && !e.metaKey && icerideKayar(e.target, e.deltaX, e.deltaY)) return;
+    e.preventDefault();
+    const r = o.iframe.getBoundingClientRect(), olcek = r.width / o.veri.w;
+    tekerlek({ clientX: r.left + e.clientX * olcek, clientY: r.top + e.clientY * olcek, deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, ctrlKey: e.ctrlKey, metaKey: e.metaKey });
+  }, { passive: false });
+  const yaziyor = (e) => e.target.closest && e.target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
+  d.addEventListener('keydown', (e) => { if (!yaziyor(e) && KISAYOL.has(e.key)) { e.preventDefault(); tusBas(e); } });
+  d.addEventListener('keyup', (e) => { if (e.key === ' ') tusBirak(e); });
+}
+
+function icerideKayar(el, dx, dy) {
+  for (let x = el && el.nodeType === 1 ? el : el && el.parentElement; x; x = x.parentElement) {
+    const st = x.ownerDocument.defaultView.getComputedStyle(x);
+    if (Math.abs(dy) >= Math.abs(dx) && /(auto|scroll)/.test(st.overflowY) && x.scrollHeight > x.clientHeight + 1) {
+      if ((dy > 0 && x.scrollTop + x.clientHeight < x.scrollHeight - 1) || (dy < 0 && x.scrollTop > 0)) return true;
+    }
+    if (Math.abs(dx) > Math.abs(dy) && /(auto|scroll)/.test(st.overflowX) && x.scrollWidth > x.clientWidth + 1) {
+      if ((dx > 0 && x.scrollLeft + x.clientWidth < x.scrollWidth - 1) || (dx < 0 && x.scrollLeft > 0)) return true;
+    }
+  }
+  return false;
+}
+
+/* ---------- seçim ---------- */
+// Tık bir panoyu vurgular (F ile ona odaklanılır). Claude'a seçim bildirilmez: ne değişeceği sohbette pano adıyla söylenir.
+// Toplu seçim: Shift+tık ekler ya da çıkarır, boşlukta sürüklemek kutu çizer (Seç aracında), ⌘A sayfadaki tüm panolar.
+// Kutu hiçbir panoya değmezse bölge olur: Sor ile Codex çizeceği panoyu oraya koyar.
+const secim = new Set();
+let bolge = null;
+function secimCiz() {
+  for (const o of ogeler.values()) if (o.tur === 'pano') o.el.classList.toggle('secili', secim.has(o.ad));
+  const b = $('#bolge');
+  if (b) {
+    b.hidden = !bolge;
+    if (bolge) Object.assign(b.style, { left: bolge.x + 'px', top: bolge.y + 'px', width: bolge.w + 'px', height: bolge.h + 'px' });
+  }
+  sorEtiketi();
+  eylemCiz();
+}
+
+function sec(ad, ekle) {
+  if (!ekle) secim.clear();
+  if (ad) { if (ekle && secim.has(ad)) secim.delete(ad); else secim.add(ad); }
+  secili = ad && secim.has(ad) ? ad : [...secim].pop() || null;
+  bolge = null;
+  secimCiz();
+  if (ad && sorBekliyor) { aracSec('sec'); codexeSor(); }
+}
+
+function hepsiniSec() {
+  secim.clear(); bolge = null;
+  for (const o of ogeler.values()) if (o.tur === 'pano') secim.add(o.ad);
+  secili = [...secim].pop() || null;
+  secimCiz();
+  if (secim.size) bildir(secim.size + ' pano seçildi');
+}
+
+// Kutu: dünya koordinatında; bırakınca değdiği panolar seçilir
+function kutuBitir(s) {
+  const k = s.kutu, kesisir = (b) => b.x < k.x + k.w && b.x + b.w > k.x && b.y < k.y + k.h && b.y + b.h > k.y;
+  $('#kutu').hidden = true;
+  if (!s.ekle) secim.clear();
+  for (const o of ogeler.values()) if (o.tur === 'pano' && kesisir(o.veri)) secim.add(o.ad);
+  secili = [...secim].pop() || null;
+  bolge = !secim.size && k.w * g.z > 40 && k.h * g.z > 40 ? { x: Math.round(k.x), y: Math.round(k.y), w: Math.round(k.w), h: Math.round(k.h) } : null;
+  secimCiz();
+  if (bolge) bildir('Bölge seçildi: Sor ile Codex buraya çizer');
+}
+
+/* ---------- fare ve klavye ---------- */
+sahne.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 && e.button !== 1) return;
+  if (e.target.closest('a')) return;
+  if (e.target.isContentEditable) return;
+  sahne.focus();
+  if (olusturAraci && e.button === 0 && !bosluk) {
+    const r = sahne.getBoundingClientRect(), wx = (e.clientX - r.left - g.x) / g.z, wy = (e.clientY - r.top - g.y) / g.z;
+    e.preventDefault(); sonOlusturma = Date.now();
+    if (olusturAraci === 'bag') { surukleme = { tur: 'bag-ciz', id: e.pointerId, sx: e.clientX, sy: e.clientY, wx, wy, oynadi: false }; return; }
+    return void ogeEkle(olusturAraci, { x: wx, y: wy });
+  }
+  const serit = e.target.closest('.serit'), notEl = e.target.closest('[data-not]'), panoEl = e.target.closest('.pano');
+  if (!bosluk && e.button === 0 && serit) {
+    const ad = serit.parentElement.dataset.pano;
+    return tasimaBasla(e, 'pano', ad, tuval.boards[ad], ogeler.get('p:' + ad));
+  }
+  if (!bosluk && e.button === 0 && notEl) {
+    const id = notEl.dataset.not;
+    return tasimaBasla(e, 'not', id, tuval.notes[id], ogeler.get('n:' + id));
+  }
+  if (YALIN && !bosluk && e.button === 0 && !panoEl) {
+    const r = sahne.getBoundingClientRect();
+    const wx = (e.clientX - r.left - g.x) / g.z, wy = (e.clientY - r.top - g.y) / g.z;
+    surukleme = { tur: 'kutu', id: e.pointerId, sx: e.clientX, sy: e.clientY, wx, wy, kutu: { x: wx, y: wy, w: 0, h: 0 }, ekle: e.shiftKey, oynadi: false };
+    return;
+  }
+  surukleme = { tur: 'kaydir', id: e.pointerId, sx: e.clientX, sy: e.clientY, gx: g.x, gy: g.y, pano: panoEl ? panoEl.dataset.pano : null, ekle: e.shiftKey, oynadi: false };
+});
+
+function tasimaBasla(e, tur, ad, veri, o) {
+  if (!veri || !o) return;
+  const grup = tur === 'pano' && secim.has(ad) && secim.size > 1
+    ? [...secim].map((a) => ({ ad: a, veri: tuval.boards[a], o: ogeler.get('p:' + a) })).filter((x) => x.veri && x.o)
+    : [{ ad, veri, o }];
+  grup.forEach((x) => { x.x0 = x.veri.x; x.y0 = x.veri.y; });
+  surukleme = { tur, ad, veri, o, grup, id: e.pointerId, sx: e.clientX, sy: e.clientY, x0: veri.x, y0: veri.y, ekle: e.shiftKey, oynadi: false };
+  e.preventDefault();
+}
+
+sahne.addEventListener('pointermove', (e) => {
+  const s = surukleme;
+  if (!s || e.pointerId !== s.id) return;
+  const dx = e.clientX - s.sx, dy = e.clientY - s.sy;
+  if (!s.oynadi) {
+    if (Math.hypot(dx, dy) < 3) return;
+    s.oynadi = true;
+    sahne.setPointerCapture(e.pointerId);
+    sahne.classList.add('kayiyor');
+  }
+  if (s.tur === 'kaydir') {
+    g.x = s.gx + dx;
+    g.y = s.gy + dy;
+    uygula();
+  } else if (s.tur === 'bag-ciz') {
+    let o = $('#bagOnizle');
+    if (!o) { o = document.createElement('div'); o.id = 'bagOnizle'; dunya.append(o); }
+    o.style.left = s.wx + 'px'; o.style.top = s.wy + 'px'; o.innerHTML = OK_SVG('onizle', dx / g.z, dy / g.z);
+  } else if (s.tur === 'kutu') {
+    const x2 = s.wx + dx / g.z, y2 = s.wy + dy / g.z;
+    s.kutu = { x: Math.min(s.wx, x2), y: Math.min(s.wy, y2), w: Math.abs(x2 - s.wx), h: Math.abs(y2 - s.wy) };
+    const k = $('#kutu');
+    k.hidden = false;
+    Object.assign(k.style, { left: s.kutu.x + 'px', top: s.kutu.y + 'px', width: s.kutu.w + 'px', height: s.kutu.h + 'px' });
+  } else {
+    for (const x of s.grup) {
+      x.veri.x = Math.round(x.x0 + dx / g.z);
+      x.veri.y = Math.round(x.y0 + dy / g.z);
+      x.o.el.style.left = x.veri.x + 'px';
+      x.o.el.style.top = x.veri.y + 'px';
+    }
+  }
+});
+
+async function birak(e) {
+  const s = surukleme;
+  if (!s || e.pointerId !== s.id) return;
+  surukleme = null;
+  sahne.classList.remove('kayiyor');
+  if (s.tur === 'bag-ciz') {
+    $('#bagOnizle')?.remove();
+    const dx = (e.clientX - s.sx) / g.z, dy = (e.clientY - s.sy) / g.z;
+    if (Math.hypot(dx, dy) > 12) ogeEkle('bag', { x: s.wx, y: s.wy, dx, dy });
+    return;
+  }
+  if (!s.oynadi) {
+    if (s.tur === 'kaydir' || s.tur === 'kutu') { notSec(null); sec(s.pano || null, s.ekle); }
+    else if (s.tur === 'pano') { notSec(null); sec(s.ad, s.ekle); }
+    else if (s.tur === 'not') notSec(s.ad);
+    return;
+  }
+  if (s.tur === 'kaydir') return;
+  if (s.tur === 'kutu') return kutuBitir(s);
+  eylemKonumla();
+  canliPlanla();
+  const tasi = async (x) => {
+    const r = await fetch('/api/tasi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tur: s.tur, ad: x.ad, x: x.veri.x, y: x.veri.y }) });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).hata || 'sunucu cevap vermedi');
+  };
+  try {
+    for (const x of s.grup) await tasi(x);  // sırayla: canvas.json'a eşzamanlı yazım olmasın
+    const yerler = s.grup.map((x) => ({ ad: x.ad, x0: x.x0, y0: x.y0, x1: x.veri.x, y1: x.veri.y }));
+    adimEkle({ ad: s.tur === 'pano' ? (yerler.length > 1 ? yerler.length + ' pano taşındı' : 'Pano taşındı') : turAd(s.veri) + ' taşındı',
+      geri: async () => { for (const y of yerler) await yerKoy(s.tur, y.ad, y.x0, y.y0); }, ileri: async () => { for (const y of yerler) await yerKoy(s.tur, y.ad, y.x1, y.y1); } });
+    ogeCubukKonumla();
+    bildir(s.grup.length > 1 ? s.grup.length + ' panonun yeri kaydedildi' : 'Yeri kaydedildi');
+  } catch (hata) {
+    for (const x of s.grup) {
+      x.veri.x = x.x0;
+      x.veri.y = x.y0;
+      x.o.el.style.left = x.x0 + 'px';
+      x.o.el.style.top = x.y0 + 'px';
+    }
+    bildir('Yer kaydedilemedi: ' + hata.message);
+  }
+}
+sahne.addEventListener('pointerup', birak);
+sahne.addEventListener('pointercancel', birak);
+
+sahne.addEventListener('dblclick', (e) => {
+  const hedef = document.elementFromPoint(e.clientX, e.clientY);
+  const nEl = hedef && hedef.closest('[data-not]');
+  if (nEl) return void notDuzenle(nEl.dataset.not);
+  const p = hedef && hedef.closest('.pano');
+  if (!p) return;
+  if (hedef.closest('.serit')) odakla(p.dataset.pano);
+});
+
+sahne.addEventListener('wheel', (e) => { e.preventDefault(); tekerlek(e); }, { passive: false });
+
+function tekerlek(e) {
+  const r = sahne.getBoundingClientRect(), cx = e.clientX - r.left, cy = e.clientY - r.top;
+  let dx = e.deltaX, dy = e.deltaY;
+  if (e.deltaMode === 1) { dx *= 16; dy *= 16; }
+  if (e.ctrlKey || e.metaKey) yakinlas(Math.exp(-Math.max(-60, Math.min(60, dy)) * 0.01), cx, cy);
+  else { g.x -= dx; g.y -= dy; uygula(); }
+}
+
+const KISAYOL = new Set([' ', 'Escape', '/', '0', '1', '+', '=', '-', 'f', 'F']);
+addEventListener('keydown', (e) => {
+  if (e.target.closest && e.target.closest('input, textarea')) return;
+  // Kabuğun içinde: V veri panelini açar (kabukta), tuvalin kısayolları burada kalır
+  if (YALIN && (e.key === 'v' || e.key === 'V') && !e.metaKey && !e.ctrlKey) return void parent.postMessage({ beyin: 'veri' }, location.origin);
+  if (YALIN && (e.metaKey || e.ctrlKey) && (e.key === 'j' || e.key === 'J')) { e.preventDefault(); return void parent.postMessage({ beyin: 'panel' }, location.origin); }
+  if (YALIN && (e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); return void parent.postMessage({ beyin: 'ara' }, location.origin); }
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); return void (e.shiftKey ? ileriAl() : geriAl()); }
+  if (YALIN && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    if (notSecili && (e.key === 'Backspace' || e.key === 'Delete')) { e.preventDefault(); return void notSil(notSecili); }
+    if (notSecili && e.key === 'Enter') { e.preventDefault(); return void notDuzenle(notSecili); }
+    const arac = { h: 'el', H: 'el', c: 'sor', C: 'sor', d: 'ciz', D: 'ciz', n: 'not', N: 'not', r: 'sekil', R: 'sekil', l: 'bag', L: 'bag', t: 'metin', T: 'metin' }[e.key];
+    if (arac) { e.preventDefault(); return void aracSec(arac); }
+    if (e.key === 'Escape') { notSec(null); aracSec('sec'); }
+  }
+  tusBas(e);
+});
+// Kabuğun içinde dosya sürükleme kabuğa gider: veri bulunulan alana eklenir
+if (YALIN) {
+  let say = 0;
+  addEventListener('dragenter', (e) => { if ([...(e.dataTransfer?.types || [])].includes('Files') && say++ === 0) parent.postMessage({ beyin: 'surukle', acik: true }, location.origin); });
+  addEventListener('dragleave', () => { if (--say <= 0) { say = 0; parent.postMessage({ beyin: 'surukle', acik: false }, location.origin); } });
+  addEventListener('dragover', (e) => e.preventDefault());
+  addEventListener('drop', (e) => { e.preventDefault(); say = 0; parent.postMessage({ beyin: 'dosya', dosyalar: [...(e.dataTransfer?.files || [])] }, location.origin); });
+}
+
+function tusBas(e) {
+  if (e.key === ' ') { bosluk = true; sahne.classList.add('bosluk'); e.preventDefault(); }
+  else if (e.key === 'Escape') sec(null);
+  else if ((e.metaKey || e.ctrlKey) && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); hepsiniSec(); }
+  else if (e.key === '/' || (e.key === 'k' && e.metaKey)) { e.preventDefault(); $('#ara').focus(); }
+  else if (e.metaKey || e.ctrlKey) return;
+  else if (e.key === '0') sigdir();
+  else if (e.key === '1') yakinlas(1 / g.z);
+  else if (e.key === '+' || e.key === '=') yakinlas(1.25);
+  else if (e.key === '-') yakinlas(0.8);
+  else if ((e.key === 'f' || e.key === 'F') && secili) odakla(secili);
+}
+
+function tusBirak(e) { if (e.key === ' ') { bosluk = elAraci; sahne.classList.toggle('bosluk', elAraci); } }
+addEventListener('keyup', tusBirak);
+addEventListener('resize', canliPlanla);
+addEventListener('hashchange', () => {
+  const [id, donulen] = decodeURIComponent(location.hash.slice(1)).split('/');
+  if (id !== sayfa && tuval.pages.some((p) => p.id === id)) sayfaAc(id);
+  if (donulen && tuval.boards[donulen]) odakla(donulen);
+});
+$('#uzak').onclick = () => yakinlas(0.8);
+$('#yakin').onclick = () => yakinlas(1.25);
+$('#sigdir').onclick = () => sigdir();
+
+/* ---------- arama ---------- */
+const ara = $('#ara'), sonuclar = $('#sonuclar');
+let bulunan = [], imlec = 0;
+
+function aramaCiz() {
+  const q = kucuk(ara.value.trim());
+  const sayfaAdi = Object.fromEntries(tuval.pages.map((p) => [p.id, p.name]));
+  bulunan = Object.entries(tuval.boards)
+    .filter(([f, b]) => !q || kucuk((b.title || '') + ' ' + f).includes(q))
+    .slice(0, 40).map(([f]) => f);
+  imlec = 0;
+  sonuclar.textContent = '';
+  for (const f of bulunan) {
+    const b = tuval.boards[f];
+    const d = document.createElement('button');
+    d.type = 'button';
+    d.className = 'sonuc';
+    d.setAttribute('role', 'option');
+    const s = document.createElement('span');
+    s.textContent = b.title || kok(f);
+    const k = document.createElement('small');
+    k.textContent = sayfaAdi[sayfaOf(b)] || '';
+    d.append(s, k);
+    d.onmousedown = (ev) => { ev.preventDefault(); odakla(f); ara.blur(); };
+    sonuclar.append(d);
+  }
+  sonuclar.classList.toggle('acik', bulunan.length > 0);
+  isaretle();
+}
+
+function isaretle() {
+  [...sonuclar.children].forEach((c, i) => c.setAttribute('aria-selected', String(i === imlec)));
+  sonuclar.children[imlec]?.scrollIntoView({ block: 'nearest' });
+}
+
+ara.addEventListener('input', aramaCiz);
+ara.addEventListener('focus', aramaCiz);
+ara.addEventListener('blur', () => setTimeout(() => sonuclar.classList.remove('acik'), 150));
+ara.addEventListener('keydown', (e) => {
+  e.stopPropagation();
+  if (e.key === 'ArrowDown') { imlec = Math.min(imlec + 1, bulunan.length - 1); isaretle(); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { imlec = Math.max(imlec - 1, 0); isaretle(); e.preventDefault(); }
+  else if (e.key === 'Enter' && bulunan[imlec]) { odakla(bulunan[imlec]); ara.blur(); }
+  else if (e.key === 'Escape') ara.blur();
+});
+
+/* ---------- hızlı eylemler (K-038 adım 3) ---------- */
+// Seçimin üstünde koyu çubuk: tek pano Revize et, Genişlet, Doğrula, Sor; çoklu Kümele, Birleştir, Karşılaştır, Sor.
+// Eylem kabuğa gider, istemi sunucu kurar (<pano_eylemi>). Eski panolar silinmez: revize aynı panoyu günceller (önceki
+// sürüm saklanır), öbürleri yeni panoyu seçimin sağındaki boş yere koyar; taslak pano orada belirir.
+const EYLEMLER = {
+  tek: [['revize', '✎', 'Revize et…'], ['genislet', '⤢', 'Genişlet'], ['dogrula', '✓', 'Doğrula'], ['sor', '', 'Sor…'], ['sil', '', 'Sil']],
+  cok: [['kumele', '◎', 'Kümele'], ['birlestir', '⊕', 'Birleştir'], ['karsilastir', '⇄', 'Karşılaştır'], ['sor', '', 'Sor…'], ['sil', '', 'Sil']],
+};
+const eylemEl = $('#eylem');
+let codexMesgul = false, bekleyenEylem = null, sonHalCalisiyor = false;
+const seciliPanolar = () => [...secim].filter((a) => tuval.boards[a] && sayfaOf(tuval.boards[a]) === sayfa);
+function eylemCiz() {
+  if (!YALIN || !eylemEl) return;
+  const n = seciliPanolar().length;
+  eylemEl.innerHTML = (EYLEMLER[n > 1 ? 'cok' : 'tek']).map(([ad, ik, et]) =>
+    `<button type="button" data-eylem="${ad}"${codexMesgul && ad !== 'sor' && ad !== 'sil' ? ' disabled title="Codex çalışıyor"' : ''}>${ik ? `<i>${ik}</i>` : ''}${et}</button>`).join('');
+  eylemKonumla();
+}
+function eylemKonumla() {
+  ogeCubukKonumla();
+  if (!YALIN || !eylemEl) return;
+  const b = seciliPanolar().map((a) => tuval.boards[a]);
+  const r = sahne.getBoundingClientRect();
+  const sol = Math.min(...b.map((x) => x.x)) * g.z + g.x + r.left, sag = Math.max(...b.map((x) => x.x + x.w)) * g.z + g.x + r.left;
+  const ust = Math.min(...b.map((x) => x.y)) * g.z + g.y + r.top, alt = Math.max(...b.map((x) => x.y + x.h)) * g.z + g.y + r.top;
+  const gorunur = b.length && sag > r.left && sol < r.right && alt > r.top && ust < r.bottom;
+  eylemEl.hidden = !gorunur;
+  if (!gorunur) return;
+  const yarim = eylemEl.offsetWidth / 2 + 8;
+  eylemEl.style.left = Math.min(Math.max((Math.max(sol, r.left) + Math.min(sag, r.right)) / 2, yarim), innerWidth - yarim) + 'px';
+  eylemEl.style.top = Math.max(ust - 36, r.top + 52) + 'px';  // pano başlığının üstünde, başlığı örtmez
+}
+// Yeni pano için seçimin sağında boş yer (sayfadaki panolarla çakışmaz)
+function bosYer(panolar) {
+  const s = panolar.map((a) => tuval.boards[a]), diger = Object.values(tuval.boards).filter((x) => sayfaOf(x) === sayfa), w = 1440, h = 900;
+  let x = Math.max(...s.map((b) => b.x + b.w)) + 120;
+  const y = Math.min(...s.map((b) => b.y));
+  for (let i = 0; i < 40; i++) {
+    const c = diger.find((b) => b.x < x + w && b.x + b.w > x && b.y < y + h && b.y + b.h > y);
+    if (!c) break;
+    x = c.x + c.w + 120;
+  }
+  return { x: Math.round(x), y: Math.round(y), w, h };
+}
+function eylemYolla(ad, istek = '') {
+  const panolar = seciliPanolar();
+  if (!panolar.length) return;
+  if (ad === 'sor') return codexeSor();
+  if (ad === 'sil') return void panoSil(panolar);
+  const ilk = tuval.boards[panolar[0]];
+  const yer = ad === 'revize' || ad === 'dogrula' ? { x: ilk.x, y: ilk.y, w: ilk.w, h: ilk.h } : bosYer(panolar);
+  const baslik = panolar.length > 1 ? panolar.length + ' pano' : (ilk.title || panolar[0]).split(' (')[0];
+  bekleyenEylem = { ad, hedef: ad === 'revize' ? panolar[0] : null, basladi: false };
+  parent.postMessage({ beyin: 'eylem', eylem: ad, panolar, istek, baslik, yer }, location.origin);
+}
+function revizeAc() {
+  eylemEl.innerHTML = '<input id="eylemIstek" placeholder="Ne değişsin? Boş bırak: baştan çizer" autocomplete="off"><button type="button" data-eylem="revize-yolla"><i>↵</i>Gönder</button>';
+  eylemKonumla();
+  $('#eylemIstek').focus();
+}
+if (YALIN && eylemEl) {
+  eylemEl.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-eylem]');
+    if (!b || b.disabled) return;
+    const ad = b.dataset.eylem;
+    if (ad === 'revize') return revizeAc();
+    if (ad === 'revize-yolla') { eylemYolla('revize', $('#eylemIstek').value.trim()); return eylemCiz(); }
+    eylemYolla(ad);
+  });
+  eylemEl.addEventListener('keydown', (e) => {
+    if (e.target.id !== 'eylemIstek') return;
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); eylemYolla('revize', e.target.value.trim()); eylemCiz(); }
+    else if (e.key === 'Escape') eylemCiz();
+  });
+}
+
+/* ---------- araç çubuğu (kabukta): seç, el, Codex'e sor, çizim modu, veri ---------- */
+let elAraci = false, sorBekliyor = false, cizimAcik = !!depo.al('cizim');
+const aracDugme = (ad) => document.querySelector(`[data-arac="${ad}"]`);
+function codexeSor() {
+  const panolar = [...secim];
+  if (!panolar.length && !bolge) return;
+  const baslik = bolge ? `Bölge ${bolge.w}×${bolge.h}` : panolar.length > 1 ? panolar.length + ' pano' : (tuval.boards[panolar[0]]?.title || panolar[0]).split(' (')[0];
+  parent.postMessage({ beyin: 'codex', panolar, bolge, baslik }, location.origin);
+}
+function sorEtiketi() {
+  const b = document.querySelector('[data-arac="sor"]');
+  if (b) b.querySelector('span').textContent = bolge ? 'Sor · bölge' : secim.size > 1 ? 'Sor · ' + secim.size : 'Sor';
+}
+const OLUSTUR = new Set(['not', 'sekil', 'bag', 'metin']);
+let olusturAraci = null, notSecili = null;
+function olusturCiz() {
+  for (const a of OLUSTUR) aracDugme(a)?.setAttribute('aria-pressed', String(olusturAraci === a));
+  sahne.classList.toggle('olustur', !!olusturAraci);
+  aracDugme('sec')?.setAttribute('aria-pressed', String(!olusturAraci && !elAraci));
+}
+function aracSec(ad) {
+  if (OLUSTUR.has(ad)) { olusturAraci = olusturAraci === ad ? null : ad; if (olusturAraci && elAraci) { elAraci = false; bosluk = false; sahne.classList.remove('bosluk'); aracDugme('el').setAttribute('aria-pressed', 'false'); } return void olusturCiz(); }
+  if (ad === 'sec' || ad === 'el') { olusturAraci = null; sahne.classList.remove('olustur'); for (const a of OLUSTUR) aracDugme(a)?.setAttribute('aria-pressed', 'false'); }
+  if (ad === 'veri') return void parent.postMessage({ beyin: 'veri' }, location.origin);
+  if (ad === 'ciz') return void parent.postMessage({ beyin: 'cizim', acik: !cizimAcik }, location.origin);
+  if (ad === 'sor') {
+    if (secim.size || bolge) return void codexeSor();
+    sorBekliyor = !sorBekliyor;
+    sahne.classList.toggle('sor-bekliyor', sorBekliyor);
+    aracDugme('sor').classList.toggle('bekliyor', sorBekliyor);
+    if (sorBekliyor) bildir('Codex\'e soracağın panoya tıkla');
+    return;
+  }
+  elAraci = ad === 'el';
+  sorBekliyor = false; sahne.classList.remove('sor-bekliyor'); aracDugme('sor').classList.remove('bekliyor');
+  bosluk = elAraci; sahne.classList.toggle('bosluk', elAraci);
+  aracDugme('sec').setAttribute('aria-pressed', String(!elAraci));
+  aracDugme('el').setAttribute('aria-pressed', String(elAraci));
+}
+async function tuvalOge(v) {
+  try {
+    const r = await fetch('/api/tuval-oge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(v) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.hata || 'sunucu cevap vermedi');
+    return j.sonuc;
+  } catch (h) { bildir('Olmadı: ' + h.message); return null; }
+}
+/* ---------- geri al / ileri al (en çok 10 adım): öğe ekle, sil, yaz, taşı, renk; pano sil ve taşı ---------- */
+const OGE_AD = { not: 'Not', metin: 'Metin', sekil: 'Şekil', bag: 'Bağ' }, GECMIS_SINIR = 10;
+const gecmis = [], ilerisi = [];
+const kabugaHaber = () => { if (YALIN) parent.postMessage({ beyin: 'tuvalDegisti' }, location.origin); };
+function geriCiz() { $('#geriAl').disabled = !gecmis.length; $('#ileriAl').disabled = !ilerisi.length; }
+function adimEkle(a) { gecmis.push(a); if (gecmis.length > GECMIS_SINIR) gecmis.shift(); ilerisi.length = 0; geriCiz(); }
+async function geriAl() { const a = gecmis.pop(); if (!a) return void bildir('Geri alınacak adım yok'); geriCiz(); await a.geri(); ilerisi.push(a); geriCiz(); bildir('Geri alındı: ' + a.ad); }
+async function ileriAl() { const a = ilerisi.pop(); if (!a) return void bildir('İleri alınacak adım yok'); geriCiz(); await a.ileri(); gecmis.push(a); geriCiz(); bildir('Yeniden: ' + a.ad); }
+$('#geriAl').onclick = () => geriAl();
+$('#ileriAl').onclick = () => ileriAl();
+const turAd = (n) => OGE_AD[n?.kind === 'title1' ? 'metin' : n?.kind || 'not'] || 'Öğe';
+async function ogeKaldir(id) { delete tuval.notes[id]; if (notSecili === id) notSecili = null; ogeleriKur(); ogeCubukCiz(); await tuvalOge({ is: 'sil', id }); kabugaHaber(); }
+async function ogeKoy(id, n) { tuval.notes[id] = { ...n }; ogeleriKur(); await tuvalOge({ is: 'geri', id, not: n }); kabugaHaber(); }
+async function ogeGuncelle(id, alanlar) {
+  const n = tuval.notes[id]; if (!n) return;
+  Object.assign(n, alanlar); const o = ogeler.get('n:' + id); if (o) notCiz(o); ogeCubukCiz();
+  await tuvalOge({ is: 'guncelle', id, ...alanlar });
+}
+async function yerKoy(tur, ad, x, y) {
+  const v = tur === 'pano' ? tuval.boards[ad] : tuval.notes[ad], o = ogeler.get((tur === 'pano' ? 'p:' : 'n:') + ad);
+  if (!v) return;
+  v.x = x; v.y = y; if (o) { o.el.style.left = x + 'px'; o.el.style.top = y + 'px'; }
+  eylemKonumla();
+  await fetch('/api/tasi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tur, ad, x, y }) }).catch(() => {});
+}
+async function ogeEkle(tur, k) {
+  olusturAraci = null; olusturCiz();
+  const sonuc = await tuvalOge({ is: 'ekle', tur, sayfa, x: k.x, y: k.y, dx: k.dx || 0, dy: k.dy || 0 });
+  if (!sonuc) return;
+  const id = sonuc.id;
+  tuval.notes[id] = sonuc.not; ogeleriKur(); notSec(id); kabugaHaber();
+  let kopya = null;
+  adimEkle({ ad: OGE_AD[tur] + ' eklendi', geri: async () => { kopya = { ...tuval.notes[id] }; await ogeKaldir(id); }, ileri: () => ogeKoy(id, kopya) });
+  if (tur !== 'bag') notDuzenle(id, true);
+}
+function notSec(id) {
+  notSecili = id && tuval.notes[id] ? id : null;
+  document.querySelectorAll('[data-not]').forEach((el) => el.classList.toggle('secili-not', el.dataset.not === notSecili));
+  ogeCubukCiz();
+}
+async function notSil(id) {
+  const n = tuval.notes[id];
+  if (!n) return;
+  const kopya = { ...n };
+  await ogeKaldir(id);
+  adimEkle({ ad: turAd(kopya) + ' silindi', geri: () => ogeKoy(id, kopya), ileri: () => ogeKaldir(id) });
+  bildir(turAd(kopya) + ' silindi · ⌘Z geri alır');
+}
+async function panoSil(adlar) {
+  const kayit = [];
+  for (const ad of adlar) {
+    const r = await tuvalOge({ is: 'pano-sil', ad });
+    if (r) { kayit.push({ ad, pano: r.pano, sira: r.sira }); delete tuval.boards[ad]; secim.delete(ad); }
+  }
+  if (!kayit.length) return;
+  sec(null); ogeleriKur(); kabugaHaber();
+  const ad = kayit.length > 1 ? kayit.length + ' pano silindi' : 'Pano silindi';
+  const geriKoy = async () => { for (const k of kayit) { if (await tuvalOge({ is: 'pano-geri', ...k })) tuval.boards[k.ad] = k.pano; } ogeleriKur(); kabugaHaber(); };
+  const yineSil = async () => { for (const k of kayit) { await tuvalOge({ is: 'pano-sil', ad: k.ad }); delete tuval.boards[k.ad]; secim.delete(k.ad); } sec(null); ogeleriKur(); kabugaHaber(); };
+  adimEkle({ ad, geri: geriKoy, ileri: yineSil });
+  bildir(ad + ' · ⌘Z geri alır');
+}
+// Seçili öğenin üstünde yüzen çubuk: notta renk, şekilde kare ve daire, hepsinde Sil
+const NOT_RENK = [['yellow', '#FFF7D1', '#F0E2A2'], ['blue', '#EAF1FF', '#C8DAFF'], ['green', '#EAF7EF', '#BFE6CD'], ['pink', '#FCEEF5', '#F2C6DC'], ['purple', '#F3EEFC', '#D9CBF5'], ['gray', '#F1F1EE', '#E0E0DA']];
+const COP_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 4.2h10.4M6.2 4.2V2.8h3.6v1.4M4 4.2l.7 9h6.6l.7-9"/></svg>';
+function ogeCubukCiz() {
+  const k = $('#ogeCubuk'), n = notSecili && tuval.notes[notSecili], o = n && ogeler.get('n:' + notSecili);
+  if (!k) return;
+  if (!n || !o || o.el.isContentEditable) { k.hidden = true; return; }
+  const tur = n.kind || 'not';
+  k.innerHTML = (tur === 'not' ? NOT_RENK.map(([r, d, c]) => `<button type="button" class="renk" data-renk="${r}" aria-pressed="${(n.fill || 'yellow') === r}" title="${r}" style="--d:${d};--k:${c}"><i></i></button>`).join('') + '<span class="ayrac"></span>' : '')
+    + (tur === 'sekil' ? ['kare', 'daire'].map((x) => `<button type="button" data-sekil="${x}" aria-pressed="${(n.sekil || 'kare') === x}">${x === 'kare' ? 'Kare' : 'Daire'}</button>`).join('') + '<span class="ayrac"></span>' : '')
+    + (tur !== 'bag' ? '<button type="button" data-duzenle title="Düzenle (Enter)">Düzenle</button>' : '')
+    + `<button type="button" class="sil" data-sil title="Sil (⌫)">${COP_SVG}Sil</button>`;
+  k.hidden = false; ogeCubukKonumla();
+}
+function ogeCubukKonumla() {
+  const k = $('#ogeCubuk'), o = notSecili && ogeler.get('n:' + notSecili);
+  if (!k || k.hidden || !o) return;
+  const r = (o.veri.kind === 'bag' ? o.el.querySelector('line.tut') : o.el).getBoundingClientRect();
+  k.style.left = Math.min(Math.max(r.left + r.width / 2, k.offsetWidth / 2 + 8), innerWidth - k.offsetWidth / 2 - 8) + 'px';
+  k.style.top = Math.max(r.top - 44, 56) + 'px';
+}
+$('#ogeCubuk').addEventListener('pointerdown', (e) => e.stopPropagation());
+$('#ogeCubuk').addEventListener('click', (e) => {
+  const id = notSecili, n = id && tuval.notes[id];
+  if (!n) return;
+  const rk = e.target.closest('[data-renk]'), sk = e.target.closest('[data-sekil]');
+  if (e.target.closest('[data-sil]')) return void notSil(id);
+  if (e.target.closest('[data-duzenle]')) return void notDuzenle(id);
+  const degis = (alan, yeni) => { const eski = n[alan] || (alan === 'fill' ? 'yellow' : 'kare'); if (eski === yeni) return; ogeGuncelle(id, { [alan]: yeni }); adimEkle({ ad: alan === 'fill' ? 'Renk' : 'Şekil', geri: () => ogeGuncelle(id, { [alan]: eski }), ileri: () => ogeGuncelle(id, { [alan]: yeni }) }); };
+  if (rk) degis('fill', rk.dataset.renk);
+  if (sk) degis('sekil', sk.dataset.sekil);
+});
+function notDuzenle(id, yeni = false) {
+  const o = ogeler.get('n:' + id);
+  if (!o || o.veri.kind === 'bag' || o.el.isContentEditable) return;
+  const el = o.el;
+  el.contentEditable = 'plaintext-only'; el.focus(); ogeCubukCiz();
+  getSelection().selectAllChildren(el);
+  const bitir = async () => {
+    el.removeEventListener('blur', bitir); el.removeEventListener('keydown', tus);
+    el.removeAttribute('contenteditable');
+    const metin = el.innerText.replace(/\n$/, '');
+    ogeCubukCiz();
+    if (!metin.trim() && o.veri.kind !== 'sekil') { if (yeni) { gecmis.pop(); geriCiz(); return void ogeKaldir(id); } return void notSil(id); }
+    const eski = o.veri.text || '';
+    if (metin === eski) return;
+    o.veri.text = metin;
+    await tuvalOge({ is: 'guncelle', id, text: metin });
+    if (!yeni) adimEkle({ ad: 'Yazı', geri: () => ogeGuncelle(id, { text: eski }), ileri: () => ogeGuncelle(id, { text: metin }) });
+  };
+  const tus = (e) => { e.stopPropagation(); if (e.key === 'Escape' || (e.key === 'Enter' && (e.metaKey || e.ctrlKey))) { e.preventDefault(); el.blur(); } };
+  el.addEventListener('blur', bitir); el.addEventListener('keydown', tus);
+}
+function cizimCiz() { aracDugme('ciz').setAttribute('aria-pressed', String(cizimAcik)); }
+if (YALIN) {
+  $('#araclar').addEventListener('click', (e) => { const b = e.target.closest('[data-arac]'); if (b) aracSec(b.dataset.arac); });
+  cizimCiz();
+  // Kabuktan: Codex ne yapıyor, çizim modu açık mı
+  addEventListener('message', (e) => {
+    if (e.origin !== location.origin || e.data?.beyin !== 'codexHal') return;
+    const h = e.data;
+    cizimAcik = !!h.ciz; cizimCiz();
+    if (bekleyenEylem) { if (h.calisiyor) bekleyenEylem.basladi = true; else if (bekleyenEylem.basladi) bekleyenEylem = null; }
+    sonHalCalisiyor = !!h.calisiyor;
+    if (codexMesgul !== !!h.calisiyor) { codexMesgul = !!h.calisiyor; if (!$('#eylemIstek')) eylemCiz(); }
+    codexYeri(h);
+    $('#aracCodex').hidden = !h.calisiyor;
+    $('#aracCodex').querySelector('span').textContent = 'Codex · ' + (h.is || 'Düşünüyor');
+  });
+  // Canlı çizim (K-077): kabuk Codex'in yazdığı panonun parçalarını yollar; açılışta süren çizim varsa kaldığı yerden
+  addEventListener('message', (e) => { if (e.origin === location.origin && e.data?.beyin === 'panoAkis') panoAkis(e.data).catch(() => {}); });
+  fetch('/api/pano-akis', { cache: 'no-store' }).then((r) => r.json()).then((l) => { for (const [ad, a] of Object.entries(l || {})) { akislar.set(ad, { icerik: a.icerik || '', yazilan: 0, f: null, bitti: false, baslik: a.baslik || '' }); akisCiz(ad); } }).catch(() => {});
+  // Çizim C: kabuk Defter ve Bilgi'nin ilk bloklarını yollar; kartlar panoların soluna dizilir
+  addEventListener('message', (e) => { if (e.origin === location.origin && e.data?.beyin === 'sayfaKartlari') sayfaKartlari(e.data.kartlar || []); });
+  parent.postMessage({ beyin: 'merhaba' }, location.origin);
+}
+var sayfaKartVeri = [], sonOlusturma = 0;  // araçla oluşturan tıklama sayfa kartına düşerse sekme açılmaz  // var: tuval yüklenmeden mesaj gelirse ogeleriKur sonra çizer
+function sayfaKartlari(kartlar) {
+  sayfaKartVeri = kartlar;
+  if (!tuval?.boards) return;
+  dunya.querySelectorAll('.sayfa-kart').forEach((x) => x.remove());
+  const panolar = Object.values(tuval.boards).filter((b) => sayfaOf(b) === sayfa);
+  const x0 = panolar.length ? Math.min(...panolar.map((b) => b.x)) : 0, y0 = panolar.length ? Math.min(...panolar.map((b) => b.y)) : 0;
+  const kac = (m) => String(m || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  kartlar.forEach((k, i) => {
+    const el = document.createElement('div');
+    el.className = 'sayfa-kart'; el.dataset.sayfaKart = k.sekme;
+    el.style.left = (x0 - (kartlar.length - i) * 760) + 'px'; el.style.top = y0 + 'px';
+    el.innerHTML = `<small>${kac(k.etiket)}</small><div class="ic"><h1>${kac(k.baslik)}</h1>${(k.bloklar || []).map((b) => /^h[123]$/.test(b.tur) ? `<h2>${kac(b.metin)}</h2>`
+      : b.tur === 'todo' ? `<ul class="yapilacak"><li${b.tamam ? ' class="tamam"' : ''}>${kac(b.metin)}</li></ul>`
+      : b.tur === 'ul' || b.tur === 'ol' ? `<ul><li>${kac(b.metin)}</li></ul>` : `<p>${kac(b.metin)}</p>`).join('')}</div>`;
+    el.onclick = () => { if (Date.now() - sonOlusturma > 600) parent.postMessage({ beyin: 'sekme', sekme: k.sekme }, location.origin); };
+    dunya.prepend(el);  // en altta: üstüne gelen not ve şekil tıklanabilir kalır
+  });
+  if (kartlar.length && Date.now() - otoSigdirma < 4000) { otoSigdirma = 0; sigdir(); }  // Defter kartı kenarda kesik kalmasın
+}
+
+/* ---------- Codex'in gerçek yeri (K-039 adım 3) ---------- */
+// Taslak yok, tahmin yok: Codex'in o anki adımı (hal.is) ve dokunduğu dosyalar (hal.ayrinti) hangi panoyu okuduğunu ya da
+// yazdığını söyler. Okunan pano kesik çerçeve, yazılan ya da revize edilen pano dolu çerçeve ve imleç alır; tur bitince söner.
+let kImlec = null, kImlecSaat = null;
+function imlecKoy(ad, tur, dx, dy) {  // dx, dy: pano içinde yazılan yer (canlı çizim); yoksa sol üst
+  const b = tuval.boards[ad];
+  if (!b || sayfaOf(b) !== sayfa) return;
+  if (!kImlec || !kImlec.isConnected) {
+    kImlec = document.createElement('div');
+    kImlec.className = 'codex-imlec';
+    kImlec.innerHTML = '<svg viewBox="0 0 20 20"><path d="M3 2l13 6.2-5.6 1.5L8.6 15.4z" style="fill:var(--vurgu);stroke:#FFFFFF;stroke-width:1.4;stroke-linejoin:round"/></svg><span></span>';
+    dunya.append(kImlec);
+  }
+  clearTimeout(kImlecSaat);
+  kImlec.hidden = false;
+  kImlec.classList.toggle('okuyor', tur === 'okuyor');
+  kImlec.querySelector('span').textContent = tur === 'okuyor' ? 'Codex okuyor' : tur === 'hedef' ? 'Codex bunu revize ediyor' : tur === 'ciziyor' ? 'Codex çiziyor' : 'Codex yazıyor';
+  Object.assign(kImlec.style, { left: b.x + (dx ?? Math.min(48, b.w * 0.06)) + 'px', top: b.y + (dy ?? Math.min(48, b.h * 0.06)) + 'px' });
+  if (dx != null) return;  // çizerken tuval kaymaz: kullanıcı panoya bakıyor
+  const cx = (b.x + b.w / 2) * g.z + g.x, cy = (b.y + b.h / 2) * g.z + g.y;  // görünmüyorsa oraya git
+  if (cx < 0 || cy < 0 || cx > sahne.clientWidth || cy > sahne.clientHeight) kutuyaSigdir(b, 0.8);
+}
+function imlecKaldir(gecikme = 0) { clearTimeout(kImlecSaat); kImlecSaat = setTimeout(() => { if (kImlec) kImlec.hidden = true; }, gecikme); }
+
+/* ---------- canlı çizim (K-077) ---------- */
+// Codex panoyu yazarken içerik parça parça gelir (kabuktan panoAkis): pano kendi yerinde, yazıldıkça, yukarıdan aşağı görünür
+// ve imleç yazılan yerde durur. İçerik panonun üstündeki ayrı bir çerçeveye akıtılır (betik çalışmaz); dosya yazılınca panonun
+// gerçeği yüklenir ve çerçeve kalkar. Tuval çizim sürerken açıldıysa eksik baş /api/pano-akis'ten tamamlanır.
+const akislar = new Map();  // ad -> { icerik, yazilan, f, bitti, bekle }
+const AKIS_BAS = '<!doctype html><html><head><base href="/project/"><link rel="stylesheet" href="/project/tema.css"><link rel="stylesheet" href="/project/pano-kit.css"><style>html,body{margin:0;overflow:hidden}body{background:var(--zemin)}</style></head><body>';
+function akisCiz(ad) {
+  const s = akislar.get(ad), o = ogeler.get('p:' + ad);
+  if (!s) return;
+  clearTimeout(s.bekle);
+  if (!o) {  // pano tuvale birazdan düşer (yoklama); bu sayfada değilse ya da hiç gelmezse 15 sn sonra bırakılır
+    if ((s.deneme = (s.deneme || 0) + 1) > 60) akislar.delete(ad); else s.bekle = setTimeout(() => akisCiz(ad), 250);
+    return;
+  }
+  if (!s.f || !s.f.isConnected) {  // ilk parça ya da tuval yeniden kuruldu: çerçeve baştan yazılır
+    s.f = document.createElement('iframe');
+    s.f.className = 'akis'; s.f.title = 'Çiziliyor'; s.f.setAttribute('sandbox', 'allow-same-origin');
+    o.el.insertBefore(s.f, o.serit);
+    s.f.contentDocument.open(); s.f.contentDocument.write(AKIS_BAS);
+    s.yazilan = 0; s.kapandi = false;
+    s.not?.remove();  // stil yazılırken pano boş görünür: ilk yazı gelene kadar ne olduğu söylenir
+    s.not = document.createElement('div'); s.not.className = 'yer akis-not'; s.not.textContent = 'Codex çiziyor' + (s.baslik ? ': ' + s.baslik : '') + '…';
+    o.el.insertBefore(s.not, o.serit);
+    o.el.classList.add('akiyor');
+    const b = tuval.boards[ad], cx = (b.x + b.w / 2) * g.z + g.x, cy = (b.y + b.h / 2) * g.z + g.y;
+    if (cx < 0 || cy < 0 || cx > sahne.clientWidth || cy > sahne.clientHeight) kutuyaSigdir(b, 0.8);
+  }
+  const d = s.f.contentDocument;
+  if (s.icerik.length > s.yazilan) { d.write(s.icerik.slice(s.yazilan)); s.yazilan = s.icerik.length; }
+  // İmleç son yazılan öğenin ucunda; stil dosyası geç yüklenirse ölçü sıfır gelir, biraz sonra yeniden ölçülür
+  const imlec = () => {
+    if (akislar.get(ad) !== s || !s.f?.isConnected || s.kapandi) return;
+    const gezgin = d.createTreeWalker(d.body, NodeFilter.SHOW_TEXT);
+    let sonYazi = null;
+    while (gezgin.nextNode()) if (gezgin.currentNode.nodeValue.trim() && gezgin.currentNode.parentElement?.tagName !== 'STYLE') sonYazi = gezgin.currentNode;
+    let r = null;
+    if (sonYazi) { const aralik = d.createRange(); aralik.selectNodeContents(sonYazi); const k = aralik.getClientRects(); r = k[k.length - 1] || null; }
+    if (r?.width && s.not) { s.not.remove(); s.not = null; }
+    const b = tuval.boards[ad];
+    if (b) imlecKoy(ad, 'ciziyor', r?.width ? Math.min(Math.max(r.right, 16), b.w - 8) : 24, r?.width ? Math.min(Math.max(r.bottom, 16), b.h - 8) : 24);
+  };
+  imlec(); clearTimeout(s.olc); s.olc = setTimeout(imlec, 180);
+  if (s.bitti && !s.kapandi) {
+    s.kapandi = true; d.close();
+    const kaldir = () => { if (akislar.get(ad) !== s) return; s.f?.remove(); s.not?.remove(); o.el.classList.remove('akiyor'); akislar.delete(ad); parla(o.el, 'guncellendi'); if (!akislar.size) imlecKaldir(600); };
+    canliAc(o);  // gerçeği yüklensin; yüklenince çerçeve kalkar (en geç 8 sn)
+    o.iframe?.addEventListener('load', () => setTimeout(kaldir, 120), { once: true });
+    setTimeout(kaldir, 8000);
+  }
+}
+async function panoAkis(a) {
+  let s = akislar.get(a.ad);
+  if (!s || a.basla) { s?.f?.remove(); s?.not?.remove(); s = { icerik: '', yazilan: 0, f: null, bitti: false, baslik: a.baslik || '' }; akislar.set(a.ad, s); }
+  if ((a.bas || 0) > s.icerik.length) {  // baştaki parçalar kaçtı (tuval sonradan açıldı): sunucudaki hâliyle tamamla
+    const anlik = (await (await fetch('/api/pano-akis', { cache: 'no-store' })).json().catch(() => ({})))[a.ad];
+    if (anlik && anlik.icerik.length > s.icerik.length) s.icerik = anlik.icerik;
+  }
+  if ((a.bas || 0) === s.icerik.length) s.icerik += a.parca || '';
+  if (a.bitti) s.bitti = true;
+  akisCiz(a.ad);
+}
+function codexYeri(h) {
+  const isler = new Map(), calisir = h.calisiyor && h.is !== 'Senin cevabını bekliyor';
+  if (calisir) {
+    if (bekleyenEylem?.hedef) isler.set(bekleyenEylem.hedef, 'hedef');
+    const tur = /yaz/i.test(h.is || '') ? 'yaziyor' : /Oku|Ar[ıi]/i.test(h.is || '') ? 'okuyor' : '';
+    if (tur) for (const m of (h.ayrinti || '').matchAll(/([A-Za-z0-9_.-]+\.dc\.html)/g)) if (tuval.boards[m[1]]) isler.set(m[1], tur);
+  }
+  for (const o of ogeler.values()) {
+    if (o.tur !== 'pano') continue;
+    const t = isler.get(o.ad);
+    o.el.classList.toggle('codex-okuyor', t === 'okuyor');
+    o.el.classList.toggle('codex-yaziyor', t === 'yaziyor' || t === 'hedef');
+  }
+  const [ad, tur] = [...isler].find(([, t]) => t !== 'okuyor') || [...isler][0] || [];
+  if (akislar.size) return;  // canlı çizim sürerken imleç yazılan yerde, onu akış yönetir
+  if (ad) imlecKoy(ad, tur);
+  else imlecKaldir(calisir ? 0 : 1200);
+}
+function parla(el, sinif) {
+  if (!el) return;
+  el.classList.remove(sinif); void el.offsetWidth; el.classList.add(sinif);
+  setTimeout(() => el.classList.remove(sinif), 1500);
+}
+
+/* ---------- sunucuyu izleme ---------- */
+async function yokla() {
+  try {
+    const d = await (await fetch('/api/durum', { cache: 'no-store' })).json();
+    const tuvalDegisti = d.canvas !== durum.canvas;
+    durum = d;
+    if (sunucuKapali) { sunucuKapali = false; bildir('Sunucuya yeniden bağlandı'); }
+    if (tuvalDegisti && !surukleme) {
+      const onceki = new Set(Object.keys(tuval.boards || {}));
+      tuval = await tuvalOku();
+      const yeni = Object.keys(tuval.boards || {}).filter((ad) => !onceki.has(ad) && tuval.boards[ad].page === sayfa);
+      if (!tuval.pages.some((p) => p.id === sayfa)) sayfaAc(tuval.pages[0].id);
+      else { sayfalariCiz(); ogeleriKur(); }
+      if (yeni.length && tuval.pages.some((p) => p.id === sayfa)) {
+        odakla(yeni[0]); bildir('Yeni pano: ' + (tuval.boards[yeni[0]].title || yeni[0]));
+        if (sonHalCalisiyor) imlecKoy(yeni[0], 'yaziyor');  // yeni pano kendi yerinde açılır, imleç onun üstünde
+        yeni.forEach((ad) => parla(ogeler.get('p:' + ad)?.el, 'cizildi'));
+      }
+    }
+    for (const o of ogeler.values()) {
+      if (o.tur !== 'pano') continue;
+      resimGuncelle(o);
+      if (o.iframe && o.yuklenen !== (d.surum[o.ad] || 0)) { canliAc(o); parla(o.el, 'guncellendi'); }
+    }
+    $('#ipucu').dataset.bekleyen = d.bekleyen;
+    ipucuYaz();
+  } catch {
+    if (!sunucuKapali) { sunucuKapali = true; ipucuYaz(); }
+  }
+  setTimeout(yokla, 1500);
+}
+
+function ipucuYaz() {
+  const temel = 'Kaydır: iki parmak ya da boşluğu sürükle · Yakınlaştır: sıkıştır ya da ⌘ + kaydır · Taşı: adından sürükle · Panolar canlı: içinde tıkla, yaz · Sığdır: 0 (seçili panoya, ikinci basış sayfaya)';
+  if (sunucuKapali) return void ($('#ipucu').textContent = 'Sunucu kapalı: ./baslat.sh ile aç');
+  const n = durum.bekleyen || 0;
+  $('#ipucu').textContent = n ? temel + ' · Küçük resim hazırlanıyor: ' + n : temel;
+}
+
+(async () => {
+  try {
+    durum = await (await fetch('/api/durum', { cache: 'no-store' })).json();
+    tuval = await tuvalOku();
+  } catch (hata) {
+    $('#ipucu').textContent = 'Tuval okunamadı: ' + hata.message;
+    return;
+  }
+  // Adres: #sayfa ya da #sayfa/Pano.dc.html (tek pano görünümünden dönüş o panoya odaklanır).
+  const [istenen, donulen] = decodeURIComponent(location.hash.slice(1)).split('/');
+  const ilk = [istenen, depo.al('sayfa')].find((id) => tuval.pages.some((p) => p.id === id)) || tuval.pages[0].id;
+  sayfaAc(ilk);
+  if (donulen && tuval.boards[donulen]) odakla(donulen);
+  ipucuYaz();
+  setTimeout(yokla, 1500);
+})();
+</script>
+</body>
+</html>

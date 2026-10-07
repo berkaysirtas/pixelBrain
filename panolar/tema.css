@@ -1,0 +1,20 @@
+/* Beyin teması: açık, sıcak (mercury-clair zemini). Panolar renkleri yalnız buradan alır; ton değişecekse burası. */
+:root{
+ --zemin:#EAE7DE;--tuval:#E3DFD3;--yan:#F4F2EC;--yan-2:#EFECE4;--kart:#FFFFFF;--kart-2:#F4F2EC;--kod:#F7F5F0;--secili:#E8EEFB;
+ --kenar:#DAD6CB;--kenar-2:#D2CFC4;--kenar-3:#BAB8AE;--nokta:#CFCABD;
+ --yazi:#1A1A1C;--yazi-2:#363639;--soluk:#656568;--soluk-2:#8C8A84;--yol:#2F5BC4;
+ --karar:#2F5BC4;--karar-zemin:#E6EEFD;--soru:#B7791F;--soru-zemin:#FDF1D8;--soru-koyu:#8A5600;
+ --ilke:#1A6B54;--ilke-zemin:#E3F0EA;--kaynak:#6E4BF0;--kaynak-zemin:#EEEAFF;--notr-zemin:#ECEAE3;--tehlike:#B91C1C;
+ --ters:#1A1A1C;--ters-yazi:#FFFFFF;--codex:#1A1A1C;--claude:#D97757;
+ /* Çalışma alanı renkleri (Kimlik panosu önerisi): sessiz, Notion etiketleri gibi; yazı ve zemin çifti */
+ --r-gri:#787774;--r-gri-z:#F1F1EF;--r-kahve:#9F6B53;--r-kahve-z:#F4EEEE;--r-turuncu:#D9730D;--r-turuncu-z:#FBECDD;
+ --r-sari:#CB912F;--r-sari-z:#FBF3DB;--r-yesil:#448361;--r-yesil-z:#EDF3EC;--r-mavi:#337EA9;--r-mavi-z:#E7F3F8;
+ --r-mor:#9065B0;--r-mor-z:#F6F3F9;--r-pembe:#C14C8A;--r-pembe-z:#FAF1F5;--r-kirmizi:#D44C47;--r-kirmizi-z:#FDEBEC;
+}
+/* Kabuk (motor/beyin.html, <html class="kabuk">): Notion gibi sade; beyaz sayfa, açık gri kenar çubuğu, sessiz gri yazı (K-023).
+   Panolar yukarıdaki sıcak tonda kalır. */
+.kabuk{
+ --zemin:#FFFFFF;--yan:#F7F7F5;--yan-2:#EFEFED;--yan-3:#E8E8E5;--kart:#FFFFFF;--kart-2:#F7F7F5;--kod:#F7F6F3;--secili:#EEF3FC;
+ --kenar:#EDEDEB;--kenar-2:#E3E2E0;--kenar-3:#CFCECB;--yazi:#37352F;--yazi-2:#55534E;--soluk:#787774;--soluk-2:#A6A49F;
+ --ters:#37352F;--notr-zemin:#F1F1EF;
+}

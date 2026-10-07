@@ -1,0 +1,63 @@
+{
+  "files": {
+    "scripts/beyin_entry.py": "99e8a232e6881ae5abf18b97cabc3053c3b9ea52cd259e26459d2fdf1d8d38b3",
+    "scripts/beyin_v3.py": "23578880a42cce5f6c1913af52675d2bde69059cdafa6846576558b1c7450c69",
+    "scripts/install_v3.py": "23d3af292a456193351b19069dec37682eee11d331b3bf617f535f7b5956a0f7",
+    "template/.agents/skills/beyin-doktor/SKILL.md": "c2900cbe26636e2af6134d17e315ee9b55de730ebf034588bb74ab8308364130",
+    "template/.agents/skills/beyin-guncelle/SKILL.md": "7bf7f492d6d7dc31373166eee1fa06b5be8dde629cbe6563728c1909a849780f",
+    "template/.agents/skills/beyin/SKILL.md": "e63d559208c2ceac149cce1ef503d31e94bee2ddc862f27719330d7cfea71667",
+    "template/.claude/scripts/beyin_v3.py": "e652696d2566fcca7ec98a366a1fefba266a2ec9045d49d79dfbe515fef1c20b",
+    "template/.claude/scripts/beyin_v3_bridge.py": "6893ad6a5d1a715ee3f5664d196ffa3a0474596d00e6b433f7830ca629b45c9e",
+    "template/.claude/scripts/beyin_v3_compact.py": "9cb2b4e8b6a7d380345f2a0a738540263c57e65ed08f0779c2710140aba8fd49",
+    "template/.claude/scripts/beyin_v3_companion.py": "f6ee8315d143c35bbcec9444de593630d0f42b2379b412dc2794a8ce89687bc9",
+    "template/.claude/scripts/beyin_v3_continuity.py": "d9d69f39b23cd72870c940cf1ca8b9edb6c2c0c64907dbc369279574f6bab5bc",
+    "template/.claude/scripts/beyin_v3_exclusions.py": "b08c5003e275d72ccc6794612d1b228a85ba09e34da9c8578a0da80c86804f52",
+    "template/.claude/scripts/beyin_v3_hermes.py": "3dd3cb8dc518b88dd8fc55bd941efed1cf7c955218e84bba321569adb9ccbc5e",
+    "template/.claude/scripts/beyin_v3_hook.py": "8a5ae6b821207a17213fbec2752877d9985cfa5aefb00f44fe7bc2a683627cec",
+    "template/.claude/scripts/beyin_v3_hygiene.py": "a1da88d3dd54c64163428421a1b4bf7a1a23f9ec1272578eec38a21c198f12f7",
+    "template/.claude/scripts/beyin_v3_jev.py": "ac45563907359409cbb8c8ac52dd0f4ab1bc5c0771d395b462174adfb3047972",
+    "template/.claude/scripts/beyin_v3_jev_client.py": "8835222477947d9a4f92185316d510491d757a905f579288a4fc6f80ab00b007",
+    "template/.claude/scripts/beyin_v3_jev_contracts.py": "a204d3f0e6c59639530c8c25405a8ad96c6836f5920f41da7484268ff87dee35",
+    "template/.claude/scripts/beyin_v3_launchers.py": "a1b16846ab64f9b0b656c3b4e546be85bec23aa65c759a42bacc21d2d05b88ca",
+    "template/.claude/scripts/beyin_v3_laya.py": "5be99a8823b458d2f6fc19417ff631803c945e635f13cbda2b1f9ac8a999f83c",
+    "template/.claude/scripts/beyin_v3_memory_assessment.py": "f57826633e24e3b1da97d1a41879c72f3cc66a1fe02226c8f53b2b885e3ac2be",
+    "template/.claude/scripts/beyin_v3_migrate.py": "01225f5c4c827a697eef8b6bc963d34a6be7a57a9627880eafcf097891553a7c",
+    "template/.claude/scripts/beyin_v3_omp.py": "2e2db2c8b211ee2faeb4d236bc5700a9da7985c0c3e565c4cdc68f7577eb1e92",
+    "template/.claude/scripts/beyin_v3_opencode.py": "3b32cfada8bf2ea8f4b15859d1f54f45d89ec28ba8690a794a6d058807138105",
+    "template/.claude/scripts/beyin_v3_parallel.py": "dd7ebf2b064d581bd4b66affc0da6057ac589a82fe3f1870213ebb7c2c8cd358",
+    "template/.claude/scripts/beyin_v3_passage.py": "44620241fb66c2b02da0c4cb2c4308d6a76d7d96c1a491859ed5b06e863ca09c",
+    "template/.claude/scripts/beyin_v3_preferences.py": "3af8fed79950ea60949a8315259fcce8d47e0bb4abaade8de856d5766863fb24",
+    "template/.claude/scripts/beyin_v3_projections.py": "4734b09353010d4b172d65934a8efb455a700a5a85313aaad8173dd1f58ed91f",
+    "template/.claude/scripts/beyin_v3_references.py": "a48eea2fa49ac32672b2f5f3a4b38f04483e7e06e25f6657c0e7a327d1b59c37",
+    "template/.claude/scripts/beyin_v3_releases.py": "025ddecb1944e36033bfe3f071ae78160545ad9d6117aed9c6089baeae2141e7",
+    "template/.claude/scripts/beyin_v3_secrets.py": "7514883431b9149f1296c97e6086fa9f9f6710193cd22f10067a540065ef2b9a",
+    "template/.claude/scripts/beyin_v3_skills.py": "ef3705f8051794a11d6d4a9192f0b15bac66a67bfe69f707864636b4aad75b89",
+    "template/.claude/scripts/beyin_v3_sync.py": "1d9a3160e4e74dea42922b0379cef8719b6f963db80b074a2158d10abb51a97c",
+    "template/.claude/scripts/beyin_v3_update.py": "f27aecb748e342547d41ad0bac15085e9ac066741727011a8aed6af1b5871abb"
+  },
+  "legacy_hashes": {
+    ".claude/hooks/pre-compact.ps1": "1af3b730efbe4148444cf9e6ea0421ca03b49d8588a43c7ed1760c1c5712c835",
+    ".claude/hooks/pre-compact.sh": "19e39f72f431203374fe3f26b94c4ceae0f031949617d8a5bfdcb9b93964ffd8",
+    ".claude/hooks/prompt-counter.ps1": "bcb6375090dcbf716c62e0232f61772a69d83ced289ad5ed7d37126246237cde",
+    ".claude/hooks/prompt-counter.sh": "3494e2a7282c0278372496c08a51c0e605879d16146ffe184a71e218721a40c0",
+    ".claude/hooks/session-end.ps1": "8fbf8f92572d01eb5b71582ae4e05df392c0aa69e60cfc57d5f3686c5251471c",
+    ".claude/hooks/session-end.sh": "3f079c8b64a907fc81b58187d32317b1db182e14190d600498d6cd48b1fbb92a",
+    ".claude/hooks/session-start.ps1": "c90f93b3bd21deae6289504646b56b0aeb91a5ba38401b8188053d73eb1edcee",
+    ".claude/hooks/session-start.sh": "92dd2ce61777cc80034894fc8e0e053cebcec3bfc3c2455e5c1783b7bbae4088",
+    ".claude/scripts/compile.py": "23af64eb892283b907de63fcb9241208a3edf13b4f2e41ff4cecb2a1a8570150",
+    ".claude/scripts/flush.py": "f36f8eb4da19222c7a70ea2659b140595834ce7a52483a6549bcab869e2fb404"
+  },
+  "legacy_skill_hashes": {
+    ".claude/skills/beyin-doktor/SKILL.md": [
+      "1a07918cabe2177c2b8e0a6405e57eb7d5ac6a9d5bd910c7500c92105a0d55d8",
+      "4b0e9aeae1067ae084380f7f179f12b9090213f3990c2973adbef999321e9a87",
+      "53ce40e622c22d0869fcd064f5bd9cfc75d8de0b666b992ab31f5722b611117b",
+      "fd7919c86d140314de82660b2b6f428e2804c4e4d5df35e68d9904dc0ab50df5"
+    ]
+  },
+  "migrations": [],
+  "min_python": "3.11",
+  "runtime_schema": 1,
+  "schema": 1,
+  "version": "3.7.1"
+}

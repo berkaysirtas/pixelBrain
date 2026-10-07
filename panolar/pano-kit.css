@@ -1,0 +1,60 @@
+/* Pano kiti (K-078): Codex'in çizdiği içerik panolarının ortak stili. Codex her panoda stili sıfırdan yazmıyor (panoların
+   yarısı stildi, pano o sırada boş görünüyordu); yalnız işaretleme yazar, bu sınıfları kullanır. Renkler tema.css'ten.
+   Sözlük kısa tutulur: Codex'in tarifinde (sunucu.py › yerlestir_tarifi) bire bir yazılıdır; sınıf eklenirse orası da güncellenir. */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&display=swap');
+html,body{margin:0}
+.pk{--pr:var(--karar);--prz:var(--karar-zemin);box-sizing:border-box;width:100%;min-height:100vh;padding:56px 64px;background:var(--zemin);color:var(--yazi);
+  font:15px/1.5 Geist,Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.pk *{box-sizing:border-box}
+.pk h1,.pk h2,.pk h3,.pk p,.pk ul,.pk ol{margin:0}
+.pk>*+*{margin-top:28px}
+/* Renk: kart vurgusu, etiket, bant, akış adımı ve onay işareti bu rengi alır */
+.pk .mavi{--pr:var(--r-mavi);--prz:var(--r-mavi-z)}.pk .yesil{--pr:var(--r-yesil);--prz:var(--r-yesil-z)}
+.pk .sari{--pr:var(--r-sari);--prz:var(--r-sari-z)}.pk .kirmizi{--pr:var(--r-kirmizi);--prz:var(--r-kirmizi-z)}
+.pk .mor{--pr:var(--r-mor);--prz:var(--r-mor-z)}.pk .turuncu{--pr:var(--r-turuncu);--prz:var(--r-turuncu-z)}
+.pk .gri{--pr:var(--r-gri);--prz:var(--r-gri-z)}.pk .pembe{--pr:var(--r-pembe);--prz:var(--r-pembe-z)}
+/* Başlık */
+.pk-ust{font:600 12px 'Geist Mono',ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--soluk)}
+.pk h1{font-size:44px;line-height:1.06;letter-spacing:-.035em;font-weight:700}
+.pk-ust+h1{margin-top:10px}
+.pk-ozet{font-size:18px;line-height:1.5;color:var(--yazi-2);max-width:860px}
+h1+.pk-ozet{margin-top:12px}
+.pk-bas{display:flex;justify-content:space-between;align-items:flex-start;gap:48px}
+.pk-bas>:first-child{flex:1;min-width:0}
+.pk-yan{width:400px;flex:none;border-left:3px solid var(--pr);padding:2px 0 2px 18px;font-size:16px;line-height:1.5;color:var(--yazi-2)}
+/* Düzen */
+.pk-izgara{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+.pk-izgara.s2{grid-template-columns:repeat(2,1fr)}.pk-izgara.s4{grid-template-columns:repeat(4,1fr)}.pk-izgara.s5{grid-template-columns:repeat(5,1fr)}
+.pk-satir{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.pk-cizgi{height:1px;background:var(--kenar-2)}
+/* Kutular */
+.pk-kart{background:var(--kart);border:1px solid var(--kenar);border-radius:18px;padding:24px}
+.pk-kart.vurgu{border:2px solid var(--pr)}
+.pk-kart>*+*{margin-top:12px}
+.pk h2{font:600 12px 'Geist Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--soluk)}
+.pk h3{font-size:24px;line-height:1.2;letter-spacing:-.025em;font-weight:650}
+.pk-kart p,.pk-bant p{font-size:15px;line-height:1.5;color:var(--yazi-2)}
+.pk-bant{display:flex;gap:24px;align-items:center;background:var(--prz);border-left:4px solid var(--pr);border-radius:14px;padding:18px 24px}
+.pk-bant strong{color:var(--pr);font-size:20px;flex:none}
+.pk-koyu{display:flex;gap:24px;align-items:center;justify-content:space-between;background:var(--ters);color:var(--ters-yazi);border-radius:16px;padding:20px 26px}
+.pk-koyu strong{font-size:20px}.pk-koyu span,.pk-koyu p{font-size:14px;opacity:.75}
+/* Öğeler */
+.pk-etiket{display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;background:var(--prz);color:var(--pr);font-size:12px;font-weight:700;width:max-content}
+.pk-liste{padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.pk-liste li{position:relative;padding-left:16px;font-size:15px;line-height:1.45}
+.pk-liste li::before{content:'';position:absolute;left:0;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--pr)}
+.pk-tik{padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.pk-tik li{position:relative;padding-left:30px;font-size:15px;line-height:1.4}
+.pk-tik li::before{content:'✓';position:absolute;left:0;top:0;width:20px;height:20px;border-radius:50%;background:var(--prz);color:var(--pr);display:grid;place-items:center;font-size:12px;font-weight:800}
+.pk-akis{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:32px}
+.pk-akis>*{position:relative;background:var(--kart);border:1px solid var(--kenar);border-top:3px solid var(--pr);border-radius:14px;padding:16px 18px}
+.pk-akis>*+*::before{content:'→';position:absolute;left:-26px;top:50%;transform:translateY(-50%);color:var(--soluk-2);font-size:18px}
+.pk-akis i{display:block;font:600 11px 'Geist Mono',ui-monospace,monospace;font-style:normal;color:var(--pr);letter-spacing:.06em}
+.pk-akis b{display:block;font-size:18px;letter-spacing:-.015em;margin-top:2px}
+.pk-akis small{display:block;font-size:13px;line-height:1.4;color:var(--soluk);margin-top:4px}
+.pk-sayi b{display:block;font-size:44px;line-height:1;letter-spacing:-.04em;color:var(--pr)}
+.pk-sayi small{display:block;font-size:13px;color:var(--soluk);margin-top:6px}
+.pk-not{font-size:13px;line-height:1.5;color:var(--soluk)}
+.pk-tablo{width:100%;border-collapse:collapse;font-size:15px}
+.pk-tablo th{text-align:left;font:600 11px 'Geist Mono',ui-monospace,monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--soluk);padding:0 12px 10px 0;border-bottom:1px solid var(--kenar-2)}
+.pk-tablo td{padding:12px 12px 12px 0;border-bottom:1px solid var(--kenar);vertical-align:top}

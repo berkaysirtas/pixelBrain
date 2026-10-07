@@ -1,0 +1,37 @@
+# Bu depo yalnız programı taşır; kişisel veri buraya girmez.
+/.durum/
+/.arac/
+/node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+*.yaziliyor*
+*.guncelleniyor
+
+# Depoyu klonlayıp kasa olarak kullanırsan senin verin (git'e girmez, güncelleme dokunmaz)
+/notlar/
+/sayfalar/
+/ben/
+/knowledge/
+/ham/
+/receipts/
+/daily/
+/tasks/
+/calisma.json
+/panolar/*
+!/panolar/tema.css
+!/panolar/arayuz.css
+!/panolar/pano-kit.css
+/.beyin*
+/.claude/
+/.codex/
+/.omp/
+/.opencode/
+/.agents/*
+!/.agents/skills/
+/.agents/skills/*
+!/.agents/skills/beyin-veri/
+/AGENTS.md
+/CLAUDE.md
+/beyin.py
+/Beyni Güncelle.command
