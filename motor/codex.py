@@ -74,8 +74,16 @@ class Kopru:
             self.yuklu.clear()
             self.aktif_tur.clear()
             try:
-                self.surec = subprocess.Popen(['codex', 'app-server', '--enable', 'default_mode_request_user_input'], cwd=self.kok,
+                # Beyin klasörü bu süreç için güvenilir sayılır; yoksa yeni kurulumda hafıza kancaları (.codex/hooks.json) kapalı kalır.
+                # Kullanıcının ~/.codex/config.toml'una yazılmaz, yalnız bu sürecin ayarıdır.
+                # Değer satır içi tablo: Codex -c anahtarını noktadan böler, "/Users/ali.veli/Beyin" gibi yol anahtarda bozulur
+                guven = 'projects={' + json.dumps(os.path.realpath(self.kok)) + '={trust_level="trusted"}}'
+                self.surec = subprocess.Popen(['codex', 'app-server', '-c', guven, '--enable', 'default_mode_request_user_input'], cwd=self.kok,
                                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+            except FileNotFoundError:
+                self.hata = ('Codex kurulu değil. Terminalde: npm install -g @openai/codex, sonra codex login. '
+                             'Ardından Beyin\'i kapatıp yeniden aç.')
+                raise RuntimeError(self.hata)
             except OSError as e:
                 self.hata = 'Codex başlatılamadı: ' + str(e)
                 raise RuntimeError(self.hata)

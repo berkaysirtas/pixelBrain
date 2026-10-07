@@ -14,7 +14,7 @@
     "template/.claude/scripts/beyin_v3_exclusions.py": "b08c5003e275d72ccc6794612d1b228a85ba09e34da9c8578a0da80c86804f52",
     "template/.claude/scripts/beyin_v3_hermes.py": "3dd3cb8dc518b88dd8fc55bd941efed1cf7c955218e84bba321569adb9ccbc5e",
     "template/.claude/scripts/beyin_v3_hook.py": "8a5ae6b821207a17213fbec2752877d9985cfa5aefb00f44fe7bc2a683627cec",
-    "template/.claude/scripts/beyin_v3_hygiene.py": "a1da88d3dd54c64163428421a1b4bf7a1a23f9ec1272578eec38a21c198f12f7",
+    "template/.claude/scripts/beyin_v3_hygiene.py": "433e260e5feda9fac523dcfcd5a7d5714af05b3f265bfe53e05de4c042ae16ef",
     "template/.claude/scripts/beyin_v3_jev.py": "ac45563907359409cbb8c8ac52dd0f4ab1bc5c0771d395b462174adfb3047972",
     "template/.claude/scripts/beyin_v3_jev_client.py": "8835222477947d9a4f92185316d510491d757a905f579288a4fc6f80ab00b007",
     "template/.claude/scripts/beyin_v3_jev_contracts.py": "a204d3f0e6c59639530c8c25405a8ad96c6836f5920f41da7484268ff87dee35",

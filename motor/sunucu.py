@@ -609,11 +609,14 @@ def entegrasyonlar(tazele=False):
         return ENT_ONBELLEK['veri']
     sonuc = []
     kod, surum = _komut(['codex', '--version'])
+    girisli = kod == 0 and _komut(['codex', 'login', 'status'])[0] == 0
     bagli = KOPRU.calisiyor() and not KOPRU.hata
-    sonuc.append({'ad': 'codex', 'baslik': 'Codex', 'durum': 'bagli' if bagli and kod == 0 else 'uyari' if kod == 0 else 'yok',
-                  'ozet': 'Bağlı' if bagli else 'Köprü kapalı' if kod == 0 else 'Kurulu değil',
-                  'aciklama': (surum.splitlines()[0] if kod == 0 else 'codex komutu bulunamadı') + f" · {len(KOPRU.gorevler)} alan konuşması",
-                  'ayrinti': KOPRU.hata or 'hata yok', 'eylem': ['kontrol', 'Kontrol et']})
+    # Yeni kurulumda kullanıcı ne yapacağını görsün: kurulu değil ve giriş yok durumları çözümüyle yazılır, ham hata ayrıntıya ANSI'siz gider
+    sonuc.append({'ad': 'codex', 'baslik': 'Codex', 'durum': 'yok' if kod != 0 else 'uyari' if not girisli else 'bagli' if bagli else 'yarim',
+                  'ozet': 'Kurulu değil' if kod != 0 else 'Giriş yok' if not girisli else 'Bağlı' if bagli else 'Hazır, alan açınca başlar',
+                  'aciklama': 'Terminalde: npm install -g @openai/codex, sonra codex login' if kod != 0
+                  else 'Terminalde: codex login' if not girisli else surum.splitlines()[0] + f" · {len(KOPRU.gorevler)} alan konuşması",
+                  'ayrinti': re.sub(r'\x1b\[[0-9;]*m', '', KOPRU.hata) or 'hata yok', 'eylem': ['kontrol', 'Kontrol et']})
     kod_gh, gh = _komut(['gh', 'auth', 'status'])
     hesap = re.search(r'account (\S+)', gh)
     _, uzak = _komut(['git', 'remote', '-v'])
@@ -1260,7 +1263,7 @@ ONERI_TALIMATI = '\n'.join([
     "alinti sayfada birebir geçmeli, tek bloktan ve tek satırdan olmalı, en çok 160 karakter. neden: bir cümle; <ilgili_notlar>'daki bir "
     "kayda dayanıyorsa kaynağını an. <gecmis_oneriler>'deki önerileri tekrarlama. Araç kullanma, dosya okuma: her şey mesajda.",
     "Ayrıca ogrenilen (en çok 2, çoğu zaman boş): notta kullanıcının işi, hedefi, kararı ya da kalıcı çalışma biçimi hakkında yeni ve "
-    "kalıcı bir bilgi görürsen. iddia: tek kısa cümle, senin sözünle (örnek: 'Ekim hedefi: kliniklerde 12 görüşme'). alinti: dayandığı "
+    "kalıcı bir bilgi görürsen. iddia: tek kısa cümle, senin sözünle (örnek: 'Ekim hedefi: 12 müşteri görüşmesi'). alinti: dayandığı "
     "cümle, sayfadan birebir. hedef: bilgi (bu alana ait olgu, hedef, karar) ya da tercih (kullanıcının kalıcı çalışma biçimi). bolum: "
     "Bilgi sayfasında altına gireceği kısa başlık (örnek: Hedefler). Bunlar kullanıcıya 'bu bilgi bu mu?' diye sorulur; emin olmadığını, "
     "geçici olanı, <kullanici> ya da <ilgili_notlar>'da zaten olanı ve <sorulanlar>'dakileri koyma.",

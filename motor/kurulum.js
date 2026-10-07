@@ -7,7 +7,7 @@
   const ADIMLAR = [
     { ad: 'Hoş geldin', baslik: "Beyin'e hoş geldin", metin: 'Sen yazarsın, Codex düzenler; hepsi tek ağda birleşir. İki dakikada gezdireyim.' },
     { ad: 'Çalışma alanları', hedef: '#rayListe', baslik: 'Çalışma alanların', metin: 'Hayatının büyük parçaları burada. İzole olanı Codex ayrı tutar; içindekiler başka yere karışmaz.' },
-    { ad: 'Alan', hedef: '.sy-sekmeler', alanda: true, baslik: 'Her alan üç sayfa', metin: "Defter yalnız senin: sen yazarsın, Codex dokunmaz. Bilgi Codex'in: okur, özetler, kaynağını gösterir. Çizim ikinizin tuvali." },
+    { ad: 'Alan', hedef: '.sy-sekmeler:not(.ob-sekmeler)', alanda: true, baslik: 'Her alan üç sayfa', metin: "Defter yalnız senin: sen yazarsın, Codex dokunmaz. Bilgi Codex'in: okur, özetler, kaynağını gösterir. Çizim ikinizin tuvali." },
     { ad: 'Veri ekle', hedef: '#veriDugme', alanda: true, baslik: 'Veri ekle', metin: 'Dosyayı bırak ya da YouTube linkini yapıştır. Codex okur, özetler, doğru alana koyar.' },
     { ad: 'Codex', hedef: ['.panel', '[data-ust-codex]'], alanda: true, baslik: 'Codex yanında', metin: 'Sağ bölmede konuş. Neyi okuyup nereye yazdığını tuvalde canlı görürsün; ⌘J açar, kapatır.' },
     { ad: 'Ortak beyin', hedef: '#ortakDugme', baslik: 'Ortak beyin ve ⌘K', metin: 'Her şey tek ağda birleşir. ⌘K ile her çalışma alanına, alana ve panoya gidersin.' },
@@ -16,7 +16,7 @@
   const ONERI = ['Kişisel', 'İşim', 'Ürünlerim'];
   let tur = null;
 
-  // Öğretici dersler (K-052, K-062) ogretici.js'de: window.ogreticiKur yedi ders alanını kurar.
+  // Öğretici dersler (K-052, K-062) ogretici.js'de: window.ogreticiKur ders alanlarını kurar.
 
   const stil = document.createElement('style');
   stil.textContent = `
@@ -65,6 +65,8 @@
   document.head.append(stil);
 
   const kat = (s) => String(s || '').toLocaleLowerCase('tr');
+  const SAYI = ['', 'bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz', 'on'];
+  const dersSayisi = () => SAYI[window.Ogretici?.DERSLER.length] || 'birkaç';
   const ilkSatir = (s) => (String(s || '').split('\n').map((l) => l.trim()).find(Boolean) || '').slice(0, 160);
   const noktalar = (i) => `<span class="tur-nokta">${ADIMLAR.map((_, j) => `<i${j === i ? ' class="on"' : ''}></i>`).join('')}</span>`;
   const programIkonu = (boy) => (typeof kivSvg === 'function' ? kivSvg('normal', boy) : pxSvg(PROGRAM_PX, 'mor', boy));  // anlatan Kıvılcım (K-064)
@@ -89,7 +91,7 @@
     const liste = calisma.calisma_alanlari.filter((c) => !c.gizli);
     const ca = liste.find((c) => c.id === secenek.ca) || liste.find((c) => c.alanlar.length) || null;
     const alan = ca ? ca.alanlar.find((a) => a.id === secenek.alan) || ca.alanlar[0] || null : null;
-    tur = { i: 0, ca, alan, hedef: null, kok: document.createElement('div') };
+    tur = { i: 0, ca, alan, hedef: null, kok: document.createElement('div'), bos: !ca };
     tur.kok.id = 'tur';
     tur.kok.innerHTML = '<div class="tur-delik" hidden></div><div class="tur-balon" role="dialog" aria-modal="true" aria-label="Beyin turu"></div>';
     tur.kok.addEventListener('click', tikla);
@@ -97,7 +99,10 @@
     addEventListener('keydown', tus, true);
     addEventListener('resize', yerlestir);
     adimGoster();
+    // Kimlik boşsa "Turu geç" tanışma kartına götürür (turu geçen hiç tanıştırılmıyordu, Core boş kalıyordu)
+    al('/api/ben').then((b) => { if (tur) tur.kimlikBos = kimlikBos(b?.core); }).catch(() => {});
   }
+  const kimlikBos = (core) => !String(core || '').trim() || /Henüz kişiselleştirilmedi/.test(String(core));
 
   function turKapat(durum) {
     if (!tur) return;
@@ -121,8 +126,9 @@
     tur.hedef = hedef;
     const b = tur.kok.querySelector('.tur-balon');
     b.hidden = false;
+    const metin = no === 0 && tur.bos ? "Sen yazarsın, Codex düzenler; hepsi tek ağda birleşir. Henüz hiçbir şey yok: sana küçük bir öğretici çalışma alanı açıp onun üstünde gezdireyim." : a.metin;
     b.innerHTML = `<span class="tur-ikon">${programIkonu(44)}</span><div class="tur-kart"><i class="tur-ok"></i>
-      <small>${no + 1} / ${ADIMLAR.length} · ${kacis(a.ad)}</small><h3>${kacis(a.baslik)}</h3><p>${kacis(a.metin)}</p>
+      <small>${no + 1} / ${ADIMLAR.length} · ${kacis(a.ad)}</small><h3>${kacis(a.baslik)}</h3><p>${kacis(metin)}</p>
       <div class="tur-alt">${noktalar(no)}<span class="tur-dugmeler"><button type="button" data-tur="gec">Turu geç</button><button type="button" class="ana" data-tur="ileri">İleri</button></span></div></div>`;
     yerlestir();
     b.querySelector('[data-tur="ileri"]').focus();
@@ -150,10 +156,27 @@
     b.style.top = Math.max(16, Math.min(y, H - bh - 16)) + 'px';
   }
 
-  function git(n) {
+  async function git(n) {
+    if (!tur || tur.hazirlaniyor) return;
+    if (n > 0 && tur.i === 0 && !tur.ca && tur.bos) await ogreticiHazirla();
     if (!tur) return;
-    tur.i = Math.max(0, Math.min(ADIMLAR.length - 1, tur.i + n));
+    let i = tur.i;
+    do i = Math.max(0, Math.min(ADIMLAR.length - 1, i + n)); while (ADIMLAR[i].alanda && !tur.alan && i > 0 && i < ADIMLAR.length - 1);
+    tur.i = i;
     adimGoster();
+  }
+  // Boş kurulumda tur gösterecek bir alan bulamazdı (bulgu: balon ortada boşta, başka sekmeler parlıyordu): öğretici çalışma
+  // alanı burada kurulur, alan adımları ilk dersinde yürür. Kurulamazsa alan adımları atlanır.
+  async function ogreticiHazirla() {
+    const d = tur.kok.querySelector('[data-tur="ileri"]');
+    tur.hazirlaniyor = true;
+    if (d) { d.disabled = true; d.textContent = 'Hazırlanıyor…'; }
+    try {
+      const id = await window.ogreticiKur({ git: false });
+      calisma = await al('/api/calisma'); yanCiz();
+      const ca = calisma.calisma_alanlari.find((c) => c.id === id);
+      if (tur) { tur.ca = ca || null; tur.alan = ca?.alanlar[0] || null; tur.ogretici = !!ca; }
+    } catch {} finally { if (tur) tur.hazirlaniyor = false; }
   }
 
   function tus(e) {
@@ -169,7 +192,10 @@
   function tikla(e) {
     const d = e.target.closest('[data-tur]')?.dataset.tur;
     if (d === 'ileri') return git(1);
-    if (d === 'gec') return turKapat('gecildi');
+    if (d === 'gec') {
+      if (tur.kimlikBos && !ADIMLAR[tur.i].son) { tur.i = ADIMLAR.length - 1; return void adimGoster(); }
+      return turKapat('gecildi');
+    }
     if (d === 'basla') return basla();
     const og = e.target.closest('[data-ogren]');
     if (og) return og.setAttribute('aria-pressed', String(og.getAttribute('aria-pressed') !== 'true'));
@@ -193,7 +219,8 @@
     const hitapB = bul(HITAP), isB = bul(NE_IS), kimB = bul((b) => b.startsWith('kimim'));
     const hitap0 = hitapB ? ilkSatir(hitapB.govde) : (/^\s*([A-ZÇĞİÖŞÜ][a-zçğıöşü]+)/.exec(kimB?.govde || '') || [])[1] || '';
     tur.ben = { bolumler, hitap0, is0: isB ? ilkSatir(isB.govde) : '' };
-    const mevcut = calisma.calisma_alanlari.filter((c) => !c.gizli);
+    const ogreticiVar = calisma.calisma_alanlari.some((c) => c.ogretici);
+    const mevcut = calisma.calisma_alanlari.filter((c) => !c.gizli && !c.ogretici);
     const cipler = mevcut.length
       ? mevcut.map((c) => `<button type="button" class="tur-cip" data-ca="${kacis(c.id)}" aria-pressed="${c.id === tur.ca?.id}">${c.ikon_px ? pxSvg(c.ikon_px, renkOf(c), 18) : ''}${kacis(c.ad)}</button>`).join('')
       : ONERI.map((ad, i) => `<button type="button" class="tur-cip" data-yeni="${kacis(ad)}" aria-pressed="${i === 0}">${kacis(ad)}</button>`).join('')
@@ -205,9 +232,10 @@
       <label>Sana nasıl hitap edeyim?<input id="turHitap" value="${kacis(tur.ben.hitap0)}" autocomplete="off" spellcheck="false"></label>
       <label>Ne iş yapıyorsun?<input id="turIs" value="${kacis(tur.ben.is0)}" placeholder="Örn. şirketleri uçtan uca dijitalleştiriyorum" autocomplete="off"></label>
       <div class="tur-alan">${mevcut.length ? 'Nereden başlayalım?' : 'İlk çalışma alanın'}<div class="tur-cipler">${cipler}</div></div>
-      <button type="button" class="tur-ogren" data-ogren aria-pressed="${!mevcut.length}"><span class="anahtar"></span>Beyin'i öğren alanını da aç<small>yedi kısa ders; her adımı yaptığında kendiliğinden işaretlenir</small></button>
+      ${ogreticiVar ? `<p class="tur-not" style="margin:0 0 14px">Beyin'i öğren rayda: ${dersSayisi()} kısa ders, her adımı yaptığında kendiliğinden işaretlenir.</p>`
+        : `<button type="button" class="tur-ogren" data-ogren aria-pressed="${!mevcut.length}"><span class="anahtar"></span>Beyin'i öğren alanını da aç<small>${dersSayisi()} kısa ders; her adımı yaptığında kendiliğinden işaretlenir</small></button>`}
       <p class="tur-not">Cevapların Ayarlar › Ben'e yazılır; istediğin zaman değiştirirsin.</p>
-      <div class="tur-alt">${noktalar(ADIMLAR.length - 1)}<span class="tur-dugmeler"><button type="button" class="ana" data-tur="basla">Başla</button></span></div>`;
+      <div class="tur-alt">${noktalar(ADIMLAR.length - 1)}<span class="tur-dugmeler"><button type="button" data-tur="gec">Sonra</button><button type="button" class="ana" data-tur="basla">Başla</button></span></div>`;
     kart.querySelector('#turHitap').focus();
   }
 
@@ -237,6 +265,7 @@
         const ad = sec.dataset.yeni || deger('#turKendi');
         if (!ad) throw new Error('Çalışma alanına bir ad yaz');
         const id = await gonder('/api/calisma', { ad });
+        await gonder('/api/alan', { calisma: id, ad: 'Genel', kaynak: 'tur' });
         calisma = await al('/api/calisma'); yanCiz();
         hedef = `#/c/${id}`;
       }
@@ -244,7 +273,7 @@
       dugme.disabled = false;
       return bildir(h.message);
     }
-    const ogren = tur.kok.querySelector('[data-ogren]')?.getAttribute('aria-pressed') === 'true';
+    const ogren = tur.ogretici || tur.kok.querySelector('[data-ogren]')?.getAttribute('aria-pressed') === 'true';
     turKapat('bitti');
     bildir(yazildi ? "Hazır. Cevaplarını Ayarlar › Ben'e yazdım" : 'Hazır');
     if (ogren) await window.ogreticiKur().catch(() => { if (hedef) location.hash = hedef; });
@@ -253,13 +282,13 @@
 
   window.turBaslat = turBaslat;
   window.komutEylemleri = () => [{ ad: 'Turu başlat', ek: 'İlk kurulum', tur: 'Eylem', ik: `<span class="ikon">${programIkonu(16)}</span>`, eylem: () => turBaslat() },
-    { ad: "Beyin'i öğren", ek: 'Yedi ders', tur: 'Eylem', ik: `<span class="ikon">${programIkonu(16)}</span>`, eylem: () => window.ogreticiKur().catch(() => {}) }];
+    { ad: "Beyin'i öğren", ek: `${dersSayisi().replace(/^./, (h) => h.toLocaleUpperCase('tr'))} ders`, tur: 'Eylem', ik: `<span class="ikon">${programIkonu(16)}</span>`, eylem: () => window.ogreticiKur().catch(() => {}) }];
   document.addEventListener('click', (e) => { if (e.target.closest('[data-tur-baslat]')) turBaslat(); });
   // İlk açılış: Core.md boşsa (ya da hafızanın başlangıç şablonundaysa) ve tur hiç görülmediyse kendiliğinden başlar
   addEventListener('load', () => setTimeout(async () => {
     if (depo.al('kurulum') || tur) return;
     const ben = await al('/api/ben').catch(() => null);
     const core = String(ben?.core || '');
-    if (ben && (!core.trim() || /Henüz kişiselleştirilmedi/.test(core))) turBaslat();
+    if (ben && kimlikBos(core)) turBaslat();
   }, 900));
 })();

@@ -1,4 +1,4 @@
-// Öğretici dersler (K-062, pano ArayuzOgreticiT2): "Beyin'i öğren" çalışma alanında yedi ders. Her dersin Defter'inde anlatım ve
+// Öğretici dersler (K-062, pano ArayuzOgreticiT2): "Beyin'i öğren" çalışma alanında sekiz ders. Her dersin Defter'inde anlatım ve
 // Dene listesi; program adımı yaptığını görünce satırı işaretler, Codex turu harcamaz. İlerlemenin tek kaynağı Defter'deki
 // işaretli Dene satırlarıdır: elle işaretlenen de sayılır. Çalışma alanı sayfası dersleri ilerleme halkasıyla gösterir, yanda
 // seçili dersin adımları; Göster sıradaki adımın yerini sarı halkayla ışıklar. Adımlar programın gördüğü gerçek eylemlerle
@@ -97,7 +97,7 @@
         { metin: '⌘J ile Codex bölmesini kapat, sonra yeniden aç', hedef: '[data-ust-codex]',
           kosul: (o, c) => (o.tur === 'mesaj-panel' || !!sec(o, '[data-ust-codex], #panelKapat') || (o.tur === 'tus' && (o.e.metaKey || o.e.ctrlKey) && (o.e.key === 'j' || o.e.key === 'J')))
             && (c.iz.panel = (c.iz.panel || 0) + 1) >= 2 },
-        { metin: "Codex'e bu alan hakkında bir soru yaz", hedef: '.cx-yaz textarea', kosul: (o, c) => o.yol === '/api/codex/gonder' && o.govde.alan === c.st.alan },
+        { metin: "Codex'e bu alan hakkında bir soru yaz, cevabını bekle", hedef: '.cx-yaz textarea', her: true, kosul: (o, c) => o.tur === 'codex-cevap' && o.alan === c.st.alan },
         { metin: 'Model düğmesinden modeli ya da düşünme seviyesini değiştir', hedef: '#cxModel', kosul: (o) => !!sec(o, '[data-model], [data-efor], [data-internet]') },
         { metin: "Codex bitince Bilgi'ye geç, yazdığını gör", hedef: '[data-sy-sekme="bilgi"]', kosul: (o, c) => o.tur === 'rota' && c.y.sekme === 'bilgi' && c.bitti(1) },
       ] },
@@ -110,8 +110,8 @@
           kosul: (o, c) => o.yol === '/api/izole' && o.govde.id === c.ca && o.govde.izole === true },
         { metin: "Ayarlar › Çalışma alanları'nda hangi alanların izole olduğuna bak", yer: false, hedef: '#ayarlarDugme', her: true,
           kosul: (o, c) => !!sec(o, '[data-sekme="ayarlar:calisma"]') || (o.tur === 'rota' && c.y.tur === 'ayarlar' && depo.al('sekme:ayarlar') === 'calisma') },
-        { metin: 'Codex\'e "Kişisel\'de ne var?" diye sor; buradan göremediğini söyler', hedef: '.cx-yaz textarea',
-          kosul: (o, c) => o.yol === '/api/codex/gonder' && o.govde.alan === c.st.alan },
+        { metin: 'Codex\'e "Kişisel\'de ne var?" diye sor; buradan göremediğini söyler', hedef: '.cx-yaz textarea', her: true,
+          kosul: (o, c) => o.tur === 'codex-cevap' && o.alan === c.st.alan },
       ] },
     { anahtar: 'ortak', ad: 'Ortak beyin ve ⌘K', baslik: 'Her şey tek ağda', renk: 'mavi',
       ozet: 'Bütün çalışma alanların tek ağda birleşir. ⌘K her yerden her yere götürür.',
@@ -124,6 +124,21 @@
         { metin: 'Ortak beyinde Ben sekmesine geç', yer: '#/ortak', hedef: '[data-sekme="ortak:ben"]', her: true,
           kosul: (o, c) => !!sec(o, '[data-sekme="ortak:ben"]') || (o.tur === 'rota' && c.y.tur === 'ben') },
         { metin: 'Son eklenenler sekmesinde en yeni şeye bak', yer: '#/ortak', hedef: '[data-sekme="ortak:son"]', her: true, kosul: (o) => !!sec(o, '[data-sekme="ortak:son"]') },
+      ] },
+    // Sıfırdan kuran biri için eksikti (2026-10-07 değerlendirmesi): çalışma alanı ve alan açmak, menü, Çöp ve Geri al (K-082)
+    { anahtar: 'calisma', ad: 'Çalışma alanı ve alan', baslik: 'Yerini aç', renk: 'yesil',
+      ozet: 'Çalışma alanı hayatının büyük bir parçası (Kişisel, İşim, bir müşteri); içinde alanlar durur. Raydaki + ile açarsın, sağ tıkla düzenlersin.',
+      anlatim: "Çalışma alanı hayatının büyük bir parçası: Kişisel, İşim, bir müşteri. İçinde alanlar durur; her alanın Defter'i, Bilgi'si ve Çizim'i var. Raydaki + ile çalışma alanı açarsın: ad, renk ve İzole seçersin. Raydaki kareye sağ tıklayınca adını, ikonunu ve sırasını değiştirir ya da Çöp'e taşırsın.",
+      kapanis: "Çöp'e taşıdığın şey kaybolmaz: altta Geri al çıkar, sonra da raydaki Çöp'ten geri yüklersin.",
+      adimlar: [
+        { metin: 'Raydaki + ile yeni bir çalışma alanı aç', yer: false, hedef: '#yeniCalisma', her: true,
+          kosul: (o) => o.yol === '/api/calisma' && 'renk' in o.govde && !o.govde.ogretici },
+        { metin: 'Açtığın çalışma alanının içine bir alan aç', yer: false, hedef: '#icerik [data-yeni-alan]', her: true,
+          kosul: (o) => o.yol === '/api/alan' && !o.govde.ders && !o.govde.kaynak },
+        { metin: 'Raydaki kareye sağ tıkla, menüyü aç', yer: false, hedef: '#rayListe .ray-kare.ca', her: true,
+          kosul: (o) => o.tur === 'sagtik' && !!sec(o, '#rayListe .ray-kare.ca, #lyUst .ly-ad') },
+        { metin: "Açtığın çalışma alanını Çöp'e taşı, sonra alttaki Geri al'a bas", yer: false, hedef: null, her: true,
+          kosul: (o, c) => { if (o.yol === '/api/calisma-kaldir') c.iz.kaldirdi = true; return o.yol === '/api/cop-geri' && !!c.iz.kaldirdi; } },
       ] },
   ];
   const yaziYeri = (t) => !!t?.closest?.('input, textarea, [contenteditable="true"], [contenteditable=""]');
@@ -199,6 +214,7 @@
   async function olay(o) {
     const ca = ogreticiCa();
     if (!ca) return;
+    if (o.yol === '/api/codex/gonder' && o.govde.alan) cevapBekle(o.govde.alan);
     const y = yerOku(), buradaki = y.tur === 'alan' && y.ca === ca.id ? dersOf(ca.alanlar.find((a) => a.id === y.alan)) : null;
     for (const d of DERSLER) {
       const kayitDers = o.yol === '/api/sayfa' && durum.get(d.anahtar)?.defter === o.govde.id;
@@ -219,6 +235,24 @@
       }
     }
   }
+  // Codex adımı istek gidince değil, cevap gelince sayılır (girişsiz Codex de dersi "geçmiş" gösteriyordu): tur bitene kadar
+  // bakılır, son turda Codex'in yazdığı bir cevap varsa "codex-cevap" olayı olur. Codex turu harcamaz, yalnız durum okunur.
+  const cevapBekleyen = new Set();
+  async function cevapBekle(alan) {
+    if (cevapBekleyen.has(alan)) return;
+    cevapBekleyen.add(alan);
+    try {
+      for (let i = 0; i < 150; i++) {  // en çok 5 dakika
+        await new Promise((r) => setTimeout(r, 2000));
+        const d = await al('/api/codex/durum').catch(() => null);
+        if (!d || (d.aktif || []).includes(alan)) continue;
+        const g = await al('/api/codex/gecmis?alan=' + encodeURIComponent(alan)).catch(() => null);
+        const son = (g?.turlar || []).at(-1), metin = (son?.parcalar || []).filter((p) => p.type === 'agentMessage').map((p) => p.text || '').join('').trim();
+        if (metin) await olay({ tur: 'codex-cevap', alan }).catch(() => {});
+        return;
+      }
+    } finally { cevapBekleyen.delete(alan); }
+  }
   const govdeOku = (b) => { try { return typeof b === 'string' ? JSON.parse(b) : {}; } catch { return {}; } };
   function fetchIzle(w) {  // kabuk ve tuval penceresi: başarılı POST isteği olay olur
     if (!w || w.__ogrIzli) return;
@@ -236,6 +270,7 @@
   addEventListener('hashchange', () => setTimeout(() => calis({ tur: 'rota' }), 50));
   document.addEventListener('click', (e) => calis({ tur: 'tik', el: e.target }), true);
   document.addEventListener('toggle', (e) => calis({ tur: 'ac', el: e.target }), true);
+  document.addEventListener('contextmenu', (e) => calis({ tur: 'sagtik', el: e.target }), true);
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && !e.shiftKey && (e.key === 'k' || e.key === 'K')) komutZaman = Date.now();
     if (e.key === 'Escape' && isik) isikKapat();
@@ -261,6 +296,11 @@
     const fr = f.getBoundingClientRect();
     return { left: fr.left + r.left, top: fr.top + r.top, width: r.width, height: r.height, right: fr.left + r.right, bottom: fr.top + r.bottom };
   }
+  const CODEXLI = new Set(['codex', 'izolasyon']);
+  async function bolmeAyarla(d) {
+    for (let k = 0; k < 30 && !document.querySelector('#icerik.dolu'); k++) await new Promise((x) => setTimeout(x, 100));
+    if (typeof panelAc === 'function' && document.querySelector('#icerik.dolu')) panelAc(CODEXLI.has(d.anahtar));
+  }
   function isikKapat() { if (!isik) return; cancelAnimationFrame(isik.kare); isik.kok.remove(); isik = null; }
   async function goster(d, i) {
     isikKapat();
@@ -268,7 +308,7 @@
     if (!st) return;
     if (i == null) { i = d.adimlar.findIndex((_, j) => !st.bitti.has(j)); if (i < 0) i = 0; }
     const a = d.adimlar[i], hedef = a.yer === false ? null : a.yer || `#/c/${st.ca}/${st.alan}/${a.git || 'yazi'}`;
-    if (hedef && location.hash !== hedef) location.hash = hedef;
+    if (hedef && location.hash !== hedef) { location.hash = hedef; if (!a.yer && a.yer !== false) bolmeAyarla(d); }
     let r = null;
     for (let k = 0; k < 40 && a.hedef && !(r = kutuBul(a.hedef)); k++) await new Promise((x) => setTimeout(x, 100));
     const kok = document.createElement('div');
@@ -295,7 +335,7 @@
     yerlestir();
   }
 
-  // Çalışma alanı sayfası (pano ArayuzOgreticiT2, kâğıt K-070): yedi ders kartı ilerleme halkasıyla, altında seçili dersin adımları
+  // Çalışma alanı sayfası (pano ArayuzOgreticiT2, kâğıt K-070): ders kartları ilerleme halkasıyla, altında seçili dersin adımları
   const TIK = '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>';
   const halka = (d, y, t) => `<svg width="46" height="46" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15" class="og-h0"/><circle cx="18" cy="18" r="15" class="og-h1" style="stroke:var(--r-${d.renk});stroke-dasharray:${((94.2 * y) / t).toFixed(1)} 94.2"/></svg>`;
   async function sayfaCiz(ca) {
@@ -308,7 +348,7 @@
     if (secili < 0) secili = Math.max(0, ilkEksik);
     const d = DERSLER[secili], st = durumlar[secili];
     const kart = (x, n) => { const y = sayi(n), t = x.adimlar.length, bitti = y === t;
-      return `<button type="button" class="og-ders" data-og-ders="${n}" aria-pressed="${n === secili}"${durumlar[n] ? '' : ' disabled title="Bu dersin alanı yok"'}>
+      return `<button type="button" class="og-ders" data-og-ders="${n}" aria-pressed="${n === secili}"${durumlar[n] ? '' : ' data-og-eksik title="Bu dersin alanı yok: tıkla, kurulsun"'}>
         <span class="og-ust" style="background:var(--r-${x.renk}-z)">${halka(x, y, t)}${bitti ? `<i class="og-tik" style="color:var(--r-${x.renk})">${TIK}</i>` : ''}</span>
         <span class="og-alt"><b>${kacis(x.ad)}</b><small>${y}/${t} adım${bitti ? ' · bitti' : ''}</small></span></button>`; };
     const adim = (a, i) => { const b = st?.bitti.has(i);
@@ -325,12 +365,16 @@
   }
   document.addEventListener('click', (e) => {
     const k = e.target.closest('[data-og-ders]'), g = e.target.closest('[data-og-git]'), s = e.target.closest('[data-og-goster]');
-    if (k) { depo.koy('og:secili', DERSLER[+k.dataset.ogDers].anahtar); sayfaCiz(caBul(yerOku().ca)); }
-    if (g) { const st = durum.get(DERSLER[+g.dataset.ogGit].anahtar); if (st) location.hash = `#/c/${st.ca}/${st.alan}/yazi`; }
+    if (k) {
+      depo.koy('og:secili', DERSLER[+k.dataset.ogDers].anahtar);
+      if (k.dataset.ogEksik !== undefined) return void ogreticiKur({ git: false }).then(() => sayfaCiz(caBul(yerOku().ca))).catch(() => {});
+      sayfaCiz(caBul(yerOku().ca));
+    }
+    if (g) { const d = DERSLER[+g.dataset.ogGit], st = durum.get(d.anahtar); if (st) { location.hash = `#/c/${st.ca}/${st.alan}/yazi`; bolmeAyarla(d); } }
     if (s) goster(DERSLER[+s.dataset.ogGoster]);
   });
 
-  // Kurulum (K-052, K-062): yedi ders alanı; var olan ders yeniden kurulmaz, kullanıcının verisine dokunulmaz.
+  // Kurulum (K-052, K-062): ders alanları; var olan ders yeniden kurulmaz, kullanıcının verisine dokunulmaz.
   // secenek: ad (çalışma alanının adı), ek (alan adlarına ek; sınama için), ikonCiz (false: Codex ikon çizmez), git (false: gitme)
   async function ogreticiKur(secenek = {}) {
     const ad = secenek.ad || AD, ek = secenek.ek || '', ikon_ciz = secenek.ikonCiz !== false;

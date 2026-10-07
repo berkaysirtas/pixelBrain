@@ -24,7 +24,8 @@ Açık kaynak (K-081): program https://github.com/berkaysirtas/pixelBrain'de, bu
 (yalnız `program.json`'daki dosyalar; yedek `.durum/guncelleme/`), Ayarlar › Program › Sürüm (`/api/surum`, `/api/guncelle`).
 Hafıza katmanı `hafiza/` paketinde; kurulumda ve güncellemede kurucusu koşar. Kaynağın yeni sürümü `python3 araclar/hafiza-al.py
 --kur` ile pakete alınır (sağlama, yamalar, ad temizliği; tutmayan yamada durur). Yayın commit'lenmiş hâlden (HEAD) kurulur.
-Kurulum kılavuzu `yayin/KURULUM.md` (ajan okur), görseller `python3 yayin/gorsel.py`. Kaynak kopyada kurulum ve güncelleme reddedilir.
+Kurulum kılavuzu `yayin/KURULUM.md` (ajan okur), görseller `python3 yayin/gorsel.py`. Ad pixelBrain, lisans `yayin/LICENSE` (Apache 2.0 ve ek
+koşullar, K-083): Sürüm kartının altındaki ad ve telif satırı lisansın koruduğu yer, kaldırılmaz. Kaynak kopyada kurulum ve güncelleme reddedilir.
 
 ## Kabuk
 `/` kabuk (`motor/beyin.html`), sade iskelet (K-029, pano `SadeIskelet.dc.html`): her şeyin tek ve sabit bir yeri var.
@@ -172,6 +173,7 @@ Kurulum kılavuzu `yayin/KURULUM.md` (ajan okur), görseller `python3 yayin/gors
 - Ortak beyin ağı `motor/ag.js`: not → konu, not → pano, nottaki atıf, not → doğduğu konuşma (seçimde görünür).
 - Ortak beyin Ağ sekmesi Obsidian grafiği gibi (K-080): tam ekran tek ağ, her düğüm yuvarlak, renk çalışma alanından; arama Enter ile düğüme gider, çalışma alanı süzgeci. Pano yalnız kendi sayfasının alanına bağlanır.
 - Çalışma alanı (K-082): raydaki + yanında kart (ad, renk, İzole); menü raydaki kareye sağ tık ya da liste başındaki ▾. Çöp'e taşı soru sormaz, bildirimde Geri al.
+- Öğretici sıfırdan kuran için (K-084): boş kurulumda tur Beyin'i öğren'de yürür, Turu geç tanışmaya götürür; 8. ders çalışma alanı ve alan; Codex adımı cevapla sayılır; boş ağda ne yapılacağı yazar.
 - Codex (`motor/codex.py`, panel `motor/codex-panel.js`): `codex app-server` sürekli süreç; alan başına bir görev
   (`.durum/codex-gorevler.json`); workspace-write + on-request: repo içinde kendi karar verir, sandbox dışı onay kartı; soru yalnız geri dönüşsüz ya da zevke bağlı işte (K-018).
   `/api/codex/{durum,gecmis,akis,gonder,cevap,dur,modeller}`. Talimat `codex_talimati()`: alan, şema, izole sınırı.

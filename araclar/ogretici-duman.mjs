@@ -115,12 +115,15 @@ try {
   await adim('tur_anahtari', async () => {
     await s.evaluate(() => window.turBaslat());
     for (let i = 0; i < 6; i++) { await s.waitForSelector('#tur [data-tur="ileri"]', { timeout: 5000 }); await s.click('#tur [data-tur="ileri"]'); }
-    await s.waitForSelector('#tur [data-ogren]', { timeout: 5000 });
-    const once = await s.$eval('#tur [data-ogren]', (e) => e.getAttribute('aria-pressed'));
-    await s.click('#tur [data-ogren]');
-    const sonra = await s.$eval('#tur [data-ogren]', (e) => e.getAttribute('aria-pressed'));
+    await s.waitForSelector('#tur .tur-son', { timeout: 5000 });
+    // Öğretici zaten varsa (bu sınamanın geçici öğreticisi) anahtar yerine tek satır: ikinci kez açtırmaz
+    const anahtar = await s.$('#tur [data-ogren]'), not = await s.$eval('#tur .tur-son', (e) => e.textContent.includes("Beyin'i öğren rayda"));
+    let once = null, sonra = null;
+    if (anahtar) { once = await anahtar.getAttribute('aria-pressed'); await anahtar.click(); sonra = await anahtar.getAttribute('aria-pressed'); }
     await s.keyboard.press('Escape');
-    return { once, sonra, kapandi: !(await s.$('#tur')) };
+    if (!anahtar && !not) hatalar.push('son kartta öğretici ne anahtar ne satır');
+    if (anahtar && once === sonra) hatalar.push('öğretici anahtarı değişmedi');
+    return { anahtar: !!anahtar, once, sonra, satir: not, kapandi: !(await s.$('#tur')) };
   });
 } finally {
   await t.close();

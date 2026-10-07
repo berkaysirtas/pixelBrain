@@ -548,7 +548,11 @@ def boundary(vault):
     if (parent / '.obsidian').is_dir():
         report['findings'].append('parent_obsidian_index: parent directory also holds a .obsidian vault root; '
                                   'Obsidian could open the parent and treat this folder as a subfolder.')
-    if not (vault / '.obsidian').is_dir():
+    # Beyin: the program lives inside the vault by design (program.json); its own trees are not a
+    # code-boundary finding, and Obsidian is optional (Settings > Integrations shows it).
+    program = (vault / 'program.json').is_file() and (vault / 'motor').is_dir()
+    program_trees = ('node_modules', 'motor', 'araclar', 'hafiza')
+    if not program and not (vault / '.obsidian').is_dir():
         report['findings'].append('no_root_obsidian: vault root has no .obsidian; open this exact folder in Obsidian, '
                                   'not a parent.')
     nested, code, visited = [], [], 0
@@ -566,8 +570,9 @@ def boundary(vault):
             folders[:] = []
             continue
         for name in folders:
-            if name in CODE_DIRS:
-                code.append(name if relative_dir == '.' else relative_dir + '/' + name)
+            path = name if relative_dir == '.' else relative_dir + '/' + name
+            if name in CODE_DIRS and not (program and path.split('/')[0] in program_trees):
+                code.append(path)
         # Never descend into hidden folders or code trees: they are the finding, and a
         # node_modules walk would cost the doctor its latency on exactly the vault it warns about.
         folders[:] = [name for name in folders if not name.startswith('.') and name not in CODE_DIRS

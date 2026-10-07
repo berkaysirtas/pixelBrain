@@ -24,6 +24,12 @@
     if (!r.ok) throw new Error(d.hata || 'Codex işlemi yapılamadı');
     return d.sonuc;
   };
+  // Codex'in ham hatası (İngilizce, 401, ağ ayrıntısı) kullanıcıya Türkçe ve ne yapacağıyla gider; yeni kurulumda en sık düşülen yer giriş
+  const codexHatasi = (m = '') => {
+    if (/\b401\b|unauthorized|not logged in/i.test(m)) return { kisa: 'Giriş yapılmamış', metin: "Codex'e giriş yapılmamış. Terminalde <code>codex login</code> çalıştır, sonra yeniden yaz." };
+    if (/429|usage limit|rate limit|quota/i.test(m)) return { kisa: 'Kullanım sınırı doldu', metin: 'Codex kullanım sınırın doldu. Sınır sıfırlanınca yeniden dene.' };
+    return { kisa: 'Tur tamamlanamadı', metin: 'Codex turu tamamlanamadı: ' + kacis(m.slice(0, 160)) };
+  };
   const svg = (d) => `<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const IKON = {
     Okudu: svg('<path d="M4 1.8h5l3 3v9.4H4z"/><path d="M9 1.8v3h3M6 8.5h4M6 11h4"/>'),
@@ -83,7 +89,13 @@
     canli.className = 'cx-canli'; canli.hidden = true;
     canli.innerHTML = '<span class="cx-isik"></span><span class="cx-canli-yazi"></span><span class="cx-sure"></span><button type="button" class="cx-dur">Dur</button>';
     akis.appendChild(canli);
-    let thread = null, bekliyor = false, kok = '', basla = 0, is = 'Düşünüyor';
+    let thread = null, bekliyor = false, kok = '', basla = 0, is = 'Düşünüyor', sonHata = null;
+    // Turun hatası akışa bir kez yazılır; durum satırı tur bitince de hatayı gösterir
+    const turHatasi = (m) => {
+      const y = codexHatasi(m);
+      if (!sonHata) { const el = document.createElement('div'); el.className = 'cx-codex'; el.innerHTML = `<p>${y.metin}</p>`; ekle(el); asagi(); }
+      sonHata = y; durum(y.kisa, 'var(--tehlike)');
+    };
     let model = depo.al('model'), efor = depo.al('efor'), ciz = !!depo.al('cizim'), baglamVeri = null, eylemVeri = null, liste = [];
     let internet = depo.al('internet') !== false;  // varsayılan açık (K-026): link ve video okunur
     const goreli = (y) => (kok && String(y).startsWith(kok + '/') ? String(y).slice(kok.length + 1) : String(y));
@@ -255,8 +267,16 @@
       if (o.method === 'item/completed' && p.item?.type === 'fileChange' && p.threadId === thread && hal) hal({ calisiyor: true, is, ciz, yazdi: (p.item.changes || []).map((c) => goreli(c.path || '')) });
       if (p.threadId && !thread && bekliyor) thread = p.threadId;
       if (!p.threadId || p.threadId !== thread) { if (o.method === 'beyin/istek-kapandi') { const el = parca.get('istek:' + p.istekId); if (el) { el.remove(); parca.delete('istek:' + p.istekId); } } return; }
-      if (o.method === 'turn/started') { is = 'Düşünüyor'; calisiyor(true); }
-      else if (o.method === 'turn/completed') { calisiyor(false); bekliyor = false; }
+      if (o.method === 'turn/started') { is = 'Düşünüyor'; sonHata = null; calisiyor(true); }
+      else if (o.method === 'turn/completed') { calisiyor(false); bekliyor = false; if (p.turn?.status === 'failed') turHatasi(p.turn.error?.message); else if (sonHata) durum(sonHata.kisa, 'var(--tehlike)'); }
+      else if (o.method === 'error') {
+        // Codex 401'de on kez yeniden dener (yarım dakika "Düşünüyor"); giriş yoksa ilk denemede söylenir ve tur durdurulur
+        const e = p.error || {};
+        const yetkisiz = e.codexErrorInfo?.responseStreamDisconnected?.httpStatusCode === 401 || /status 401\b|401 Unauthorized/i.test((e.message || '') + ' ' + (e.additionalDetails || ''));
+        if (yetkisiz) { turHatasi('401'); yolla('/api/codex/dur', { alan }).catch(() => {}); }
+        else if (!p.willRetry) turHatasi(e.message);
+        else isYap('Yeniden bağlanıyor');
+      }
       else if (o.method === 'item/started') {
         parcaCiz(p.item, false);
         const k = p.item.type === 'commandExecution' && komutOzet(p.item.command);

@@ -17,6 +17,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import urllib.error
 import urllib.request
 
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -78,6 +79,18 @@ def son_surum(depo):
             'arsiv': v['tarball_url']}
 
 
+def hata_metni(e):
+    """Kullanıcıya Türkçe ve ne yapacağıyla; ham hata metni ekrana çıkmaz."""
+    kod = getattr(e, 'code', None)
+    if kod in (403, 429):
+        return 'GitHub şu an istek sınırında; bir saat içinde kendiliğinden düzelir, sonra yeniden kontrol et'
+    if kod == 404:
+        return 'GitHub\'da yayın bulunamadı'
+    if isinstance(e, urllib.error.URLError) or isinstance(e, OSError):
+        return 'GitHub\'a ulaşılamadı; internet bağlantını kontrol et'
+    return 'sürüm bilgisi okunamadı'
+
+
 def kontrol(kok=KOK, zorla=False):
     """Yeni sürüm var mı. Sonuç günde bir kez sorulur ve .durum/guncelleme/surum.json'da saklanır; zorla hemen sorar."""
     p = program_oku(kok)
@@ -98,7 +111,7 @@ def kontrol(kok=KOK, zorla=False):
             yeni = surum_sayi(sonuc['son']) > surum_sayi(p.get('surum'))
             sonuc['durum'] = 'var' if yeni else 'guncel'
         except Exception as e:  # ağ yok, GitHub cevap vermedi, depo henüz yayın yapmadı
-            sonuc.update(durum='bilinmiyor', hata=str(e)[:160])
+            sonuc.update(durum='bilinmiyor', hata=hata_metni(e))
     os.makedirs(_durum(kok), exist_ok=True)
     with open(on, 'w', encoding='utf-8') as f:
         json.dump(sonuc, f, ensure_ascii=False, indent=1)

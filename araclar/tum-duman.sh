@@ -3,7 +3,7 @@
 # Her sınama için tek satır: ad, hatalar ve HATA satırı sayısı. Ayrıntı .durum/duman/<ad>.txt
 cd "$(dirname "$0")/.." || exit 1
 mkdir -p .durum/duman
-HIZLI="duman sayfa-duman ray-duman kimlik-duman sira-duman arac-duman canli-duman bilgi-duman kurulum-duman ogretici-duman video-gorunum-duman alan-sil-duman defter-link-duman veri-bekle-duman ayar-duman dogrula-duman defter-secim-duman defter-kilidi-duman defter-kilidi-sinama video-sinama sohbet-duman arkadas-duman pano-akis-sinama canli-cizim-duman izolasyon-sinama"
+HIZLI="duman sayfa-duman ray-duman kimlik-duman sira-duman arac-duman canli-duman bilgi-duman kurulum-duman ogretici-duman video-gorunum-duman alan-sil-duman defter-link-duman veri-bekle-duman ayar-duman dogrula-duman defter-secim-duman defter-kilidi-duman defter-kilidi-sinama video-sinama sohbet-duman arkadas-duman pano-akis-sinama canli-cizim-duman izolasyon-sinama guncelle-sinama"
 CODEX="video-yerel-duman kaynak-duman oneri-duman yazi-duman eylem-duman cizim-codex-duman izolasyon-codex-duman"
 LISTE=$HIZLI; [ "$1" = "--codex" ] && LISTE="$HIZLI $CODEX"
 kirik=0

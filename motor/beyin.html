@@ -426,6 +426,11 @@ button.ob-satir:hover{background:var(--yan-2);color:var(--yazi)}
 .ob-obs .ob-ag{position:absolute;inset:0;border:0;border-radius:0;background:var(--zemin);min-height:0}
 .ob-obs .ob-kart.ayrinti{width:300px;max-height:calc(100% - 28px);gap:12px}
 .ob-obs .ob-kart.ayrinti:empty{display:none}
+/* Boş ağ (ilk açılış): ne yapılacağı tek satırda, öğreticiye tek tık */
+.ob-bos{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(360px,calc(100% - 32px));text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--yazi-2);font-size:14px;line-height:1.5}
+.ob-obs:has(.ob-bos) .ob-kart.ayrinti{display:none}
+.ob-bos b{font-size:16px;color:var(--yazi)}.ob-bos p{margin:0}
+.ob-bos button{margin-top:8px;height:32px;padding:0 14px;border:0;border-radius:8px;background:var(--yazi);color:var(--kart);font:inherit;font-size:13.5px;font-weight:500;cursor:pointer}
 .ob-izole{display:inline-grid;margin-left:-2px;color:var(--soluk)}.ob-izole svg{width:11px;height:11px}
 .ag-kap{flex:1;position:relative;overflow:hidden;border-radius:6px;background:var(--kart);border:1px solid var(--kenar);cursor:grab;touch-action:none;min-height:420px}
 .ag-tuval{position:absolute;inset:0;display:block}
@@ -1742,6 +1747,7 @@ function obsidianAg(veri, agv, sag, dogrulama, saglikAcik, bekleyen) {
       ${kumeler.map((c) => `<button type="button" class="ob-cip" data-ob-suz="${c.id}" aria-pressed="${odak === c.id}" style="--r:var(--r-${renkOf(c)})"><i></i>${kacis(c.ad)}${c.izole ? `<span class="ob-izole" title="İzole: kendi adası">${KILIT_IKON}</span>` : ''}</button>`).join('')}
       <span class="ob-ayrac"></span><button type="button" class="ob-cip notr" data-ob-dogrulama aria-pressed="${dogrulama}">Doğrulama</button></div>
     <aside class="ob-kart ayrinti" id="obAyrinti"></aside>
+    ${kumeler.some((c) => c.alanlar.length) ? '' : `<div class="ob-bos"><b>Henüz bir şey yok</b><p>Raydaki + ile bir çalışma alanı aç, içine bir alan aç ve yaz; ağ burada büyür.</p><button type="button" data-ob-ogren>Beyin'i öğren</button></div>`}
     ${dogrulama && sag ? `<button type="button" class="ob-rozet${bekleyen ? ' var' : ''}" data-ob-saglik aria-expanded="${saglikAcik}" title="Beyin sağlığı"><i></i>${sag.tarama?.calisiyor ? 'Taranıyor' : bekleyen ? bekleyen + ' bekleyen' : 'Sağlıklı'}</button>` : ''}
     ${dogrulama && sag && saglikAcik ? `<div class="ob-saglik" id="obSaglik">${saglikHtml(sag, veri)}</div>` : ''}</div>`;
   obAg = agKur($('#obAgKap'), $('#obAyrinti'), { ...veri, defterler: agv.defterler || [], bilgi: agv.bilgi || [] },
@@ -1749,6 +1755,7 @@ function obsidianAg(veri, agv, sag, dogrulama, saglikAcik, bekleyen) {
   $('#obAra').addEventListener('input', (e) => e.target.classList.toggle('yok', obAg?.ara(e.target.value) === 0));
   $('#obAra').addEventListener('keydown', (e) => { if (e.key === 'Enter') obAg?.git(); });  // Enter: ilk eşleşmeye git
   $('#obKap').addEventListener('click', (e) => {
+    if (e.target.closest('[data-ob-ogren]')) return void window.ogreticiKur?.().catch(() => {});
     const b = e.target.closest('[data-ob-suz]');
     if (b) { depo.koy('ob:odak', b.dataset.obSuz); ortakAgCiz(); }
   });
