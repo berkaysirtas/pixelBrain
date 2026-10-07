@@ -1,7 +1,8 @@
 // Öğretici dersler duman sınaması (K-052, K-062): node araclar/ogretici-duman.mjs (sunucu açıkken). Headless; Codex çağrılmaz.
-// "Öğren deneme" adıyla öğretici kurulur: yedi ders alanı, Defter'de Dene listesi, Bilgi okuma sayfası, Çizim'de dört öğe.
+// "Öğren deneme" adıyla öğretici kurulur: sekiz ders alanı, Defter'de Dene listesi, Bilgi okuma sayfası, Çizim'de dört öğe.
 // Adımlar yapılınca Defter'deki satır kendiliğinden işaretlenir: Defter'e yazmak, Bilgi'ye geçmek, bölüm etiketi, tuvale öğe
-// (tuval penceresinin isteği), Ortak beyne gitmek. Çalışma alanı sayfası ilerlemeyi gösterir, Göster yeri ışıklar.
+// (tuval penceresinin isteği), sarı notu sürüklemek, Ortak beyne gitmek, 8. ders (+ kartı, alan, sağ tık, Çöp ve Geri al; K-084).
+// Codex adımı istek gidince değil cevap gelince işaretlenir: istek yakalanır, cevap gelmez, adım boş kalmalı. Çalışma alanı sayfası ilerlemeyi gösterir, Göster yeri ışıklar.
 // İkinci kurulum çoğaltmaz; ⌘K'da "Beyin'i öğren" ve turun son kartında anahtar var. Sonda kurulan her şey silinir.
 import { chromium } from 'playwright';
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -22,9 +23,18 @@ const yuklenmeyen = [];
 s.on('requestfailed', (r) => { if (r.url().endsWith('.js')) yuklenmeyen.push(r.url().replace(KOK, '') + ' ' + (r.failure()?.errorText || '')); });
 const adim = async (ad, f) => { try { sonuc[ad] = await f(); } catch (e) { sonuc[ad] = 'HATA: ' + String(e).slice(0, 160); hatalar.push(ad); } };
 await s.addInitScript(() => { localStorage.setItem('beyin:kurulum', 'bitti'); localStorage.setItem('beyin:oneri', 'kapali'); });
-let ca = null;
+let ca = null, ders8Ca = null;
+const D8 = 'Ders8 deneme';
 const ders = (k) => ca.alanlar.find((a) => a.ders === k);
 const temizle = () => {
+  if (ders8Ca) {  // 8. dersin açtığı çalışma alanı ve alanı
+    const sy = new Set(ders8Ca.alanlar.map((a) => a.sayfa));
+    jsonDegis('calisma.json', (c) => { c.calisma_alanlari = c.calisma_alanlari.filter((x) => x.id !== ders8Ca.id); });
+    jsonDegis('panolar/canvas.json', (v) => { v.pages = v.pages.filter((x) => !sy.has(x.id)); });
+    jsonDegis('.beyin-projects.json', (p) => { for (const k of Object.keys(p.folders)) if (p.folders[k] === ders8Ca.id) delete p.folders[k]; });
+    for (const a of ders8Ca.alanlar) for (const d of [`notlar/${a.id}`, `sayfalar/${a.id}`]) rmSync(yol(d), { recursive: true, force: true });
+    rmSync(yol(`ham/kaynaklar/${ders8Ca.id}`), { recursive: true, force: true });
+  }
   if (!ca) return;
   const sayfalar = new Set(ca.alanlar.map((a) => a.sayfa));
   jsonDegis('calisma.json', (c) => { c.calisma_alanlari = c.calisma_alanlari.filter((x) => x.id !== ca.id); });
@@ -86,6 +96,44 @@ try {
   await adim('ortak_isaret', async () => {  // her yerde geçerli adım: Ortak beyne gitmek
     await s.goto(`${KOK}/#/ortak`); await s.waitForTimeout(2500);
     return { isaretli: isaretli(await defter(ders('ortak').id)) };
+  });
+  await adim('cizim_tasi', async () => {  // sarı notu gerçekten sürükle (tuvalin /api/tasi isteği)
+    const a = ders('cizim');
+    await s.goto(`${KOK}/#/c/${ca.id}/${a.id}/cizim`); await s.waitForSelector('#icerik iframe', { timeout: 15000 }); await s.waitForTimeout(2500);
+    const fr = s.frames().find((x) => x !== s.mainFrame() && x.parentFrame() === s.mainFrame());
+    const b = await (await fr.waitForSelector('.yapiskan', { timeout: 10000 })).boundingBox();
+    await s.mouse.move(b.x + b.width / 2, b.y + 12); await s.mouse.down(); await s.mouse.move(b.x + b.width / 2 + 90, b.y + 50, { steps: 8 }); await s.mouse.up();
+    await s.waitForTimeout(2500);
+    const l = isaretli(await defter(a.id));
+    if (!l.some((x) => x.startsWith('Sarı notu tut'))) hatalar.push('sarı not sürüklendi ama adım işaretlenmedi');
+    return { isaretli: l };
+  });
+  await adim('codex_istek_sayilmaz', async () => {  // istek gider, cevap gelmez: adım boş kalır
+    const a = ders('codex');
+    await s.route('**/api/codex/gonder', (rt) => rt.fulfill({ json: { tamam: true, sonuc: true } }));
+    await s.goto(`${KOK}/#/c/${ca.id}/${a.id}/yazi`); await s.waitForSelector('.cx-yaz textarea', { timeout: 20000 }); await s.waitForTimeout(800);
+    await s.evaluate((alan) => fetch('/api/codex/gonder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ alan, metin: 'deneme' }) }), a.id);
+    await s.waitForTimeout(6000);
+    await s.unroute('**/api/codex/gonder');
+    const l = isaretli(await defter(a.id));
+    if (l.some((x) => x.startsWith("Codex'e bu alan hakkında"))) hatalar.push('Codex adımı cevap gelmeden işaretlendi');
+    return { isaretli: l };
+  });
+  await adim('ders8', async () => {  // + kartı, içine alan, sağ tık, Çöp'e taşı ve Geri al; Codex ikon çizmesin diye istek değiştirilir
+    const ikonsuz = (rt) => { if (rt.request().method() !== 'POST') return rt.continue(); rt.continue({ postData: JSON.stringify({ ...rt.request().postDataJSON(), ikon_ciz: false }) }); };
+    await s.route('**/api/calisma', ikonsuz); await s.route('**/api/alan', ikonsuz);
+    await s.goto(`${KOK}/#/ortak`); await s.waitForSelector('#yeniCalisma'); await s.waitForTimeout(800);
+    await s.click('#yeniCalisma'); await s.keyboard.type(D8); await s.keyboard.press('Enter'); await s.waitForTimeout(1500);
+    ders8Ca = (await calisma()).calisma_alanlari.find((c) => c.ad === D8);
+    await s.click('#icerik [data-yeni-alan]'); await s.waitForTimeout(300); await s.keyboard.type('Deneme alanı'); await s.keyboard.press('Enter'); await s.waitForTimeout(1500);
+    ders8Ca = (await calisma()).calisma_alanlari.find((c) => c.ad === D8);
+    await s.click(`#rayListe [data-git="#/c/${ders8Ca.id}"]`, { button: 'right' }); await s.waitForTimeout(300);
+    await s.click('#caMenu [data-cmc="cop"]'); await s.waitForSelector('#bildirim.acik.eylemli', { timeout: 5000 }); await s.click('#bildirim button'); await s.waitForTimeout(2500);
+    await s.unroute('**/api/calisma'); await s.unroute('**/api/alan');
+    ders8Ca = (await calisma()).calisma_alanlari.find((c) => c.ad === D8) || ders8Ca;
+    const l = isaretli(await defter(ders('calisma').id));
+    if (l.length !== 4) hatalar.push(`8. ders ${l.length}/4 işaretlendi`);
+    return { isaretli: l, alan: ders8Ca.alanlar.map((a) => a.ad) };
   });
   await adim('ilerleme_ve_goster', async () => {
     await s.goto(`${KOK}/#/c/${ca.id}`); await s.waitForSelector('.og-ders', { timeout: 15000 }); await s.waitForTimeout(600);

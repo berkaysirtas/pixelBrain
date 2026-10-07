@@ -2766,7 +2766,7 @@ document.addEventListener('submit', async (e) => {
   e.preventDefault();
   const url = f.url.value.trim();
   if (!url || !acikNot) return;
-  try { await gonder('/api/video', { alan: acikNot.a.id, url }); f.url.value = ''; bildir('Video sıraya girdi'); kaynakCiz(); } catch (h) { bildir(h.message); }
+  try { await gonder('/api/video', { alan: acikNot.a.id, url }); f.url.value = ''; bildir('Video sıraya girdi'); kaynakCiz(); } catch (h) { bildir(h.message, h.message.length > 60 ? 8000 : 2200); }
 });
 // "Defter'e al": başlıksa bölümün tamamı (sonraki aynı ya da üst başlığa kadar), değilse tek blok
 function defteraAl(i) {

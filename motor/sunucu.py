@@ -644,7 +644,8 @@ def entegrasyonlar(tazele=False):
     disarida = not os.path.realpath(arac).startswith(os.path.realpath(BEYIN))
     sonuc.append({'ad': 'video', 'baslik': 'Video araçları', 'durum': ('uyari' if disarida else 'bagli') if tam else 'yok',
                   'ozet': ('Çalışıyor, dışarıdan' if disarida else 'Çalışıyor') if tam else 'Eksik',
-                  'aciklama': 'yt-dlp, whisper, ffmpeg' + ('; eski global klasörden, `sh araclar/video-kur.sh` Beyin\'e alır' if disarida else '; Beyin\'in kendi klasöründe'),
+                  'aciklama': ('yt-dlp, whisper, ffmpeg' + ('; eski global klasörden, `sh araclar/video-kur.sh` Beyin\'e alır' if disarida else '; Beyin\'in kendi klasöründe'))
+                  if tam else 'YouTube ve video özetleri için. Kurulu değil: Beyin klasöründe bir kez `sh araclar/video-kur.sh`',
                   'ayrinti': arac.replace(os.path.expanduser('~'), '~'), 'eylem': ['video-mantik', 'Nasıl çalışıyor']})
     try:
         av = open(os.path.join(BEYIN, '.beyin-version'), encoding='utf-8').read().strip()
@@ -1608,6 +1609,9 @@ VIDEO_KAYIT = os.path.join(DURUM, 'videolar.json')
 video_kilit = threading.Lock()
 
 
+VIDEO_ARAC_YOK = "Video araçları kurulu değil. Klasörde bir kez: sh araclar/video-kur.sh"  # hata 80 harfte kesilir
+
+
 def video_araci():
     """yt-dlp ve mlx_whisper'ın klasörü: ortam değişkeni, Beyin'in kendi .arac/video'su, yoksa eski global klasör."""
     for k in (os.environ.get('BEYIN_VIDEO_ARAC', ''), VIDEO_ARAC_BEYIN, VIDEO_ARAC_ESKI):
@@ -1650,6 +1654,9 @@ def video_ekle(istek):
     m = YOUTUBE.search(str(istek.get('url') or ''))
     if not m:
         raise ValueError('YouTube linki değil')
+    # Araç yokken video sıraya girip kartta ham "No such file" hatasıyla düşüyordu (K-084 taze kurulum): baştan Türkçe söylenir
+    if not os.path.exists(os.path.join(video_araci(), 'yt-dlp')):
+        raise ValueError(VIDEO_ARAC_YOK)
     ca, a = alan_bul(istek['alan'])
     if not a:
         raise ValueError('alan yok')

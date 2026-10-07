@@ -18,6 +18,21 @@ hatırlar. Notların düz Markdown dosyalarıdır, kendi klasöründe kalır; Ob
 
 <p align="center"><img src="gorseller/nasil-calisir.svg" alt="Defter, Bilgi, Çizim ve hafıza" width="860"></p>
 
+## Ekranlar
+
+<p align="center"><img src="gorseller/ekran-defter.png" alt="Defter ve yanında Codex" width="860"><br>
+<sub><b>Defter</b>: senin notun; sağda Codex bu alanda yanında.</sub></p>
+
+<p align="center"><img src="gorseller/ekran-cizim.png" alt="Çizim tuvali" width="860"><br>
+<sub><b>Çizim</b>: Defter, Bilgi ve Codex'in çizdiği rota panosu aynı tuvalde.</sub></p>
+
+<table>
+<tr><td width="50%"><img src="gorseller/ekran-bilgi.png" alt="Bilgi sayfası"><br><sub><b>Bilgi</b>: Codex'in derlediği özet, tablo ve açık sorular.</sub></td>
+<td width="50%"><img src="gorseller/ekran-ortak.png" alt="Ortak beyin ağı"><br><sub><b>Ortak beyin</b>: bütün alanlar, kararlar ve panolar tek ağda.</sub></td></tr>
+</table>
+
+<sub>Ekranlardaki içerik örnektir.</sub>
+
 ## Neler var
 
 <table>
