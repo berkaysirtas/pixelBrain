@@ -24,7 +24,8 @@ Açık kaynak (K-081): program https://github.com/berkaysirtas/pixelBrain'de, bu
 (yalnız `program.json`'daki dosyalar; yedek `.durum/guncelleme/`), Ayarlar › Program › Sürüm (`/api/surum`, `/api/guncelle`).
 Hafıza katmanı `hafiza/` paketinde; kurulumda ve güncellemede kurucusu koşar. Kaynağın yeni sürümü `python3 araclar/hafiza-al.py
 --kur` ile pakete alınır (sağlama, yamalar, ad temizliği; tutmayan yamada durur). Yayın commit'lenmiş hâlden (HEAD) kurulur.
-Kurulum kılavuzu `yayin/KURULUM.md` (ajan okur), görseller `python3 yayin/gorsel.py`. Ad pixelBrain, lisans `yayin/LICENSE` (Apache 2.0 ve ek
+Kurulum kılavuzu `yayin/KURULUM.md` (ajan okur), görseller `python3 yayin/gorsel.py`, README ekranları (kurgusal
+örnekle, arayüz değişince) `python3 yayin/ekranlar.py`. Ad pixelBrain, lisans `yayin/LICENSE` (Apache 2.0 ve ek
 koşullar, K-083): Sürüm kartının altındaki ad ve telif satırı lisansın koruduğu yer, kaldırılmaz.
 Güvenlik kapısı (`sunucu.py` › `Istek.yabanci`): Host yalnız 127.0.0.1 ya da localhost; tarayıcıdan gelen yazma ve /api okuması
 yalnız Beyin'in kendi sayfasından (başka site CSRF ile çalışma alanı açabiliyordu, sahte Host ile notlar okunabiliyordu). Yeni uç

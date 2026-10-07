@@ -86,6 +86,8 @@ header{position:fixed;top:0;left:0;right:0;height:48px;display:flex;align-items:
 .sayfa-kart{overflow:visible}.sayfa-kart .ic{height:100%;overflow:hidden}
 .sayfa-kart h1{margin:0 0 22px;font-size:46px;letter-spacing:-.02em}.sayfa-kart h2{margin:24px 0 10px;font-size:25px}.sayfa-kart h3{margin:12px 0 6px;font-size:15px}
 .sayfa-kart p,.sayfa-kart li{margin:0 0 6px;color:var(--soluk)}.sayfa-kart ul{margin:0 0 8px;padding-left:20px}
+.sayfa-kart table{border-collapse:collapse;width:100%;margin:4px 0 14px;font-size:15px}
+.sayfa-kart th,.sayfa-kart td{padding:7px 10px 7px 0;border-bottom:1px solid var(--kenar);text-align:left;vertical-align:top;color:var(--soluk)}.sayfa-kart th{color:var(--yazi);font-weight:600}
 .sayfa-kart ul.yapilacak{list-style:none;padding-left:0}.sayfa-kart ul.yapilacak li::before{content:'☐';margin-right:10px}.sayfa-kart ul.yapilacak li.tamam{text-decoration:line-through;opacity:.7}.sayfa-kart ul.yapilacak li.tamam::before{content:'☑'}
 .oge-cubuk{position:fixed;z-index:30;display:flex;align-items:center;gap:2px;padding:4px;border-radius:10px;background:var(--yuzey);box-shadow:0 0 0 1px var(--kenar),0 8px 24px -10px rgba(55,53,47,.35);transform:translateX(-50%)}
 .oge-cubuk[hidden]{display:none}
@@ -1175,13 +1177,17 @@ function sayfaKartlari(kartlar) {
   const panolar = Object.values(tuval.boards).filter((b) => sayfaOf(b) === sayfa);
   const x0 = panolar.length ? Math.min(...panolar.map((b) => b.x)) : 0, y0 = panolar.length ? Math.min(...panolar.map((b) => b.y)) : 0;
   const kac = (m) => String(m || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  // Markdown tablo bir paragraf olarak gelir ("| a | b |" satırları); ham satırlar yerine tablo (Bilgi sekmesindeki gibi)
+  const tabloMu = (b) => b.tur === 'p' && /^\s*\|/.test(b.metin || '') && String(b.metin).trim().includes('\n');
+  const tablo = (m) => `<table>${String(m).trim().split('\n').filter((l) => !/^\s*\|?\s*:?-{2,}/.test(l))
+    .map((l, i) => `<tr>${l.trim().replace(/^\||\|$/g, '').split('|').map((h) => (i ? `<td>${kac(h.trim().replace(/\*\*/g, ''))}</td>` : `<th>${kac(h.trim().replace(/\*\*/g, ''))}</th>`)).join('')}</tr>`).join('')}</table>`;
   kartlar.forEach((k, i) => {
     const el = document.createElement('div');
     el.className = 'sayfa-kart'; el.dataset.sayfaKart = k.sekme;
     el.style.left = (x0 - (kartlar.length - i) * 760) + 'px'; el.style.top = y0 + 'px';
     el.innerHTML = `<small>${kac(k.etiket)}</small><div class="ic"><h1>${kac(k.baslik)}</h1>${(k.bloklar || []).map((b) => /^h[123]$/.test(b.tur) ? `<h2>${kac(b.metin)}</h2>`
       : b.tur === 'todo' ? `<ul class="yapilacak"><li${b.tamam ? ' class="tamam"' : ''}>${kac(b.metin)}</li></ul>`
-      : b.tur === 'ul' || b.tur === 'ol' ? `<ul><li>${kac(b.metin)}</li></ul>` : `<p>${kac(b.metin)}</p>`).join('')}</div>`;
+      : b.tur === 'ul' || b.tur === 'ol' ? `<ul><li>${kac(b.metin)}</li></ul>` : tabloMu(b) ? tablo(b.metin) : `<p>${kac(b.metin)}</p>`).join('')}</div>`;
     el.onclick = () => { if (Date.now() - sonOlusturma > 600) parent.postMessage({ beyin: 'sekme', sekme: k.sekme }, location.origin); };
     dunya.prepend(el);  // en altta: üstüne gelen not ve şekil tıklanabilir kalır
   });
