@@ -137,7 +137,8 @@ kaynağı `yayin/github/`) yeşil olmadan çıkmaz; güncelleyicinin sınaması 
   `codex-panel.js` (`panoAyir`: sohbette blok yerine "Çiziyor / Çizdi" satırı) → kabuk `notHal` → tuval `panoAkis`, `akisCiz`
   (panonun üstünde betiksiz `iframe.akis`'e `document.write`; imleç son yazının ucunda; bitince gerçeği yüklenir). Süren akış
   `/api/pano-akis`. Tarif tek yerde: `yerlestir_tarifi` (talimatta ve `<cizim_modu>`'da; tam hâli thread'e bir kez ve 10 turda
-  bir). Çizim turları `CIZIM_KATMANI` ile gider (`BEYIN_CIZIM_KATMANI`, varsayılan `priority` yani Fast; boş: standart).
+  bir). Fast katmanı yalnız panelde Fast anahtarı açıkken (K-085; `HIZLI_KATMAN`, `BEYIN_HIZLI_KATMAN`, varsayılan `priority`);
+  kapalıyken tur açıkça standart (`serviceTierForTurn: 'default'`).
   Sınama `python3 araclar/pano-akis-sinama.py`, `node araclar/canli-cizim-duman.mjs`, gerçek tur `node araclar/cizim-codex-duman.mjs`.
 - Pano kiti (K-078, `panolar/pano-kit.css`): Codex panoda stil yazmaz; blokta yalnız `<div class="pk">` ve kitin sınıfları
   (`.pk-bas`, `.pk-izgara`, `.pk-kart`, `.pk-bant`, `.pk-akis`, `.pk-tik` …, renk sınıfları). `pano_sar` ve canlı çizim çerçevesi
@@ -214,6 +215,11 @@ kaynağı `yayin/github/`) yeşil olmadan çıkmaz; güncelleyicinin sınaması 
   eylemiyle ya da o kullanırken arkada bir kez açılır: yazı arkadaşı bir Defter'i program açıkken bir kez okur (`arkadasBakti`),
   yeniden okutmak ⋯ › "Bu nota baksın" (`notaBaktir`, `oneriSimdi`). Yeni Codex işi eklerken bu kurala bak; kendiliğinden tetik
   ekleme. Sınama `node araclar/arkadas-duman.mjs`.
+- Kullanım sınırı (K-085): `codex.py` `kota_oku` (`account/rateLimits/read`, 60 sn önbellek; `account/rateLimits/updated` seyrek
+  birleşir, `premium` sayacı atlanır), `/api/codex/kota` (pencereler, plan, sıfırlama hakkı, `tur_maliyeti`). Her tur ölçüm kaydına
+  5 saatlik pencereden harcadığı yüzdeyi `kota` olarak yazar; `tek_tur` işleri `arka: <iş>` adıyla ve `arka` işaretiyle girer
+  (receipt göndermez). Panelde alttaki düğme ve seçicinin altındaki Kullanım bölümü; sıfırlama hakkı iki tıkla
+  (`/api/codex/kota-sifirla`, `idempotencyKey`). Sınama `python3 araclar/kota-sinama.py`.
 - Tek tık görsel (K-007, K-075): çizen alanın Codex'idir. Yollar: Defter'de "Çizime dök", öneri kartında Çiz, tuvalde hızlı
   eylemler, Codex cevabında Çiz (`[data-mesaj-ciz]`, çizim modu yalnız o mesaj için).
 - Veri yorumu (K-026): nota bırakılan dosya veriye girer, notta `[ad](/ham/...)` bağlantısı durur; "/yorumla" ya da ⋯ ile

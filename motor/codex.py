@@ -56,6 +56,7 @@ class Kopru:
         self.izoleler = set()                  # izin profiliyle açılmış thread'ler: turda sandboxPolicy gönderilmez, profili ezerdi
         self.tur_ozeti = None                  # tur bitince {alan, thread, durum, yazdi, mesajlar}; sunucu receipt'i buradan gönderir (S-017)
         self.olcum = {}                        # thread -> süren turun ölçümü (S-017)
+        self.kota = None                       # Codex kullanım sınırı, son okunan hâli (K-085)
         self.olcum_dosyasi = os.path.join(durum_klasoru, 'codex-olcum.jsonl')
         try:
             with open(self.gorev_dosyasi, encoding='utf-8') as f:
@@ -156,6 +157,58 @@ class Kopru:
             return {'is': 'Okuyor' if okur else 'Komut çalıştırıyor', 'yol': goreli(yol)}
         return None
 
+    # Kullanım sınırı (K-085): account/rateLimits/read tam okur; Codex her adımda account/rateLimits/updated ile seyrek günceller
+    @staticmethod
+    def _pencere(w):
+        return {'yuzde': w.get('usedPercent'), 'sifir': w.get('resetsAt'), 'dk': w.get('windowDurationMins')} if w else None
+
+    def kota_oku(self, yas=60):
+        """Pencereler kısadan uzuna (5 saat, hafta): kullanılan yüzde ve sıfırlanma zamanı; plan ve sıfırlama hakkı sayısı.
+        yas saniyeden tazeyse ve hiçbir pencerenin sıfırlanma zamanı geçmediyse Codex'e sorulmaz."""
+        k, simdi = self.kota, time.time()
+        if k and simdi - k['_t'] < yas and not any((w.get('sifir') or simdi + 1) <= simdi for w in k['pencereler']):
+            return k
+        self.baslat()
+        r = self.istek('account/rateLimits/read', None, 20)
+        an = (r.get('rateLimitsByLimitId') or {}).get('codex') or r.get('rateLimits') or {}
+        haklar = [c for c in (r.get('rateLimitResetCredits') or {}).get('credits') or [] if c.get('status') == 'available']
+        self.kota = {'_t': simdi, 'plan': an.get('planType'), 'haklar': len(haklar),
+                     'pencereler': sorted(filter(None, (self._pencere(an.get('primary')), self._pencere(an.get('secondary')))), key=lambda w: w.get('dk') or 0)}
+        return self.kota
+
+    def _kota_guncelle(self, p):
+        """Tur sırasındaki seyrek güncelleme: yalnız gelen pencere değişir (boş alan eskisini silmez); 'premium' gibi başka sayaç atlanır."""
+        an = p.get('rateLimits') or {}
+        if not self.kota or an.get('limitId') not in (None, 'codex'):
+            return
+        for w in filter(None, (self._pencere(an.get('primary')), self._pencere(an.get('secondary')))):
+            eski = next((x for x in self.kota['pencereler'] if x.get('dk') == w.get('dk')), None)
+            if eski is None:
+                self.kota['pencereler'].append(w)
+            else:
+                eski.update({a: d for a, d in w.items() if d is not None})
+        self.kota['_t'] = time.time()
+
+    def kota_kisa(self):
+        """En kısa pencerenin (5 saat) yüzdesi ve sıfırlanma zamanı; tur başına harcamayı ölçmek için."""
+        w = (self.kota or {}).get('pencereler') or []
+        return (w[0].get('yuzde'), w[0].get('sifir')) if w else None
+
+    def kota_sifirla(self, anahtar):
+        """Hesaptaki ücretsiz sıfırlama hakkından birini kullanır (5 saat ve hafta birlikte sıfırlanır). Kullanıcının düğmesiyle gelir."""
+        self.baslat()
+        sonuc = self.istek('account/rateLimitResetCredit/consume', {'idempotencyKey': anahtar}, 30)
+        self.kota = None
+        return sonuc.get('outcome')
+
+    def _kota_bas(self, o):
+        """Tur başlarken 5 saatlik pencerenin taze hâli (arka planda; gönderiyi bekletmez)."""
+        try:
+            self.kota_oku(0)
+        except RuntimeError:
+            return
+        o.setdefault('_kota_bas', self.kota_kisa())
+
     def isit(self):
         """Sunucu açılırken arka planda: süreç ve model listesi hazır olsun, ilk mesaj soğuk başlangıcı beklemesin."""
         try:
@@ -193,7 +246,11 @@ class Kopru:
             self.olcum.pop(p.get('threadId'), None)
             kayit = {**{k: v for k, v in o.items() if k != 't0' and not k.startswith('_')}, 'toplam': round(gecen, 1),
                      'durum': (p.get('turn') or {}).get('status'), 'zaman': time.strftime('%Y-%m-%dT%H:%M:%S')}
-            if self.tur_ozeti:
+            # Turun harcadığı: 5 saatlik pencerede yüzde puanı (K-085); pencere arada sıfırlandıysa bilinmez
+            bas, son = o.get('_kota_bas'), self.kota_kisa()
+            if bas and son and bas[1] == son[1] and None not in (bas[0], son[0]):
+                kayit['kota'] = max(0, son[0] - bas[0])
+            if self.tur_ozeti and not o.get('arka'):
                 self.tur_ozeti({'alan': o.get('alan'), 'thread': p.get('threadId'), 'durum': kayit['durum'],
                                 'yazdi': list(dict.fromkeys(o.get('_yazdi', []))), 'mesajlar': o.get('_mesajlar', [])})
             try:
@@ -214,6 +271,8 @@ class Kopru:
     # Olay akışı
     def _olay(self, m):
         p = m.get('params') or {}
+        if m.get('method') == 'account/rateLimits/updated':
+            self._kota_guncelle(p)
         self._olc(m)
         if self.bildirim and not (m.get('method') or '').startswith('beyin/'):
             self.bildirim(m)
@@ -307,10 +366,15 @@ class Kopru:
             params['sandboxPolicy'] = {'type': 'workspaceWrite', 'networkAccess': bool(internet), 'writableRoots': yazilabilir}
         elif internet is False:  # izole thread'de turun sandbox'ı profili ezerdi (K-079): internet kapalıyken söz düzeyinde
             params['input'] = [{'type': 'text', 'text': '<internet>Bu turda internet kapalı: web araması yapma, link ve video açma; yalnız bu bilgisayardaki dosyalar.</internet>', 'text_elements': []}] + params['input']
-        if katman:  # hız katmanı yalnız bu tur için (K-077: çizim turları Fast); thread'in katmanı değişmez
-            params['serviceTierForTurn'] = katman
-        self.olcum[thread] = {'t0': time.time(), 'alan': alan, 'model': model, 'efor': efor, 'katman': katman or 'standart',
-                              'baglam': sum(len(t) for t in ekler), 'mesaj': len(metin), 'adim': 0, 'arac': 0}
+        # Hız katmanı yalnız bu tur için, thread'in katmanı değişmez. Fast kotayı daha hızlı harcar (K-085): yalnız panelde
+        # açıkça seçilince; yoksa açıkça standart ('default'), kullanıcının genel Codex ayarındaki Fast buraya geçmesin
+        params['serviceTierForTurn'] = katman or 'default'
+        o = self.olcum[thread] = {'t0': time.time(), 'alan': alan, 'model': model, 'efor': efor, 'katman': katman or 'standart',
+                                  'baglam': sum(len(t) for t in ekler), 'mesaj': len(metin), 'adim': 0, 'arac': 0}
+        if self.kota is not None and time.time() - self.kota['_t'] < 20:
+            o['_kota_bas'] = self.kota_kisa()
+        else:
+            threading.Thread(target=self._kota_bas, args=(o,), daemon=True).start()
         tur = self.istek('turn/start', params)
         return {'thread': thread, 'tur': (tur.get('turn') or {}).get('id')}
 
@@ -319,16 +383,19 @@ class Kopru:
         if self.gorevler.pop(alan, None) is not None:
             self._kaydet()
 
-    def tek_tur(self, talimat, ekler, metin, sema, model=None, efor='low', zaman_asimi=120):
+    def tek_tur(self, talimat, ekler, metin, sema, model=None, efor='low', zaman_asimi=120, ad='arka'):
         """Yazı arkadaşı önerisi gibi kısa işler: iz bırakmayan (ephemeral), salt okunur bir thread'de tek tur; son mesaj
-        sema'ya uyan JSON. Görev eşlemesine ve konuşma arşivine girmez."""
+        sema'ya uyan JSON. Görev eşlemesine ve konuşma arşivine girmez; ölçüm kaydına 'arka' işaretiyle girer (K-085)."""
         ayar = {'cwd': self.kok, 'developerInstructions': talimat, 'ephemeral': True, 'approvalPolicy': 'never',
                 'sandbox': 'read-only', 'config': AYAR, **({'model': model} if model else {})}
         self.baslat()
         thread = self.istek('thread/start', ayar)['thread']['id']
         son = self.sira
         girdi = [{'type': 'text', 'text': t, 'text_elements': []} for t in (*ekler, metin)]
-        self.istek('turn/start', {'threadId': thread, 'input': girdi, 'outputSchema': sema, 'effort': efor})
+        o = self.olcum[thread] = {'t0': time.time(), 'alan': ad, 'arka': True, 'model': model, 'efor': efor, 'katman': 'standart',
+                                  'baglam': sum(len(t) for t in ekler), 'mesaj': len(metin), 'adim': 0, 'arac': 0}
+        threading.Thread(target=self._kota_bas, args=(o,), daemon=True).start()
+        self.istek('turn/start', {'threadId': thread, 'input': girdi, 'outputSchema': sema, 'effort': efor, 'serviceTierForTurn': 'default'})
         cevap, bitis = '', time.time() + zaman_asimi
         while time.time() < bitis:
             for o in self.bekle(son, 5):

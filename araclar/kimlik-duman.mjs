@@ -29,12 +29,15 @@ await adim('defter_ikonu', async () => {
   notId = await s.$eval('.sy-yuzey', (e) => e.dataset.not);
   const once = await s.$eval('.sy-ikon', (e) => e.className);
   await s.click('.sy-ikon', { force: true }); await s.waitForSelector('#kimlikSec:not([hidden]) [data-ikon-ciz]');
+  // Çizdir gerçek Codex turu açmaz (K-085: her sınama koşusu kotadan yiyordu); istek yakalanır, gövdesi denetlenir
+  let istek = null;
+  await s.route('**/api/ikon-ciz', (r) => { istek = r.request().postDataJSON(); r.fulfill({ status: 200, contentType: 'application/json', body: '{"sonuc":true}' }); });
   await s.fill('#ksTarif', 'hedef tahtası'); await s.click('#kimlikSec [data-ikon-ciz]'); await s.waitForTimeout(600);
-  const durum = await (await fetch(KOK + '/api/ikon-durum')).json(), anahtar = `${ca}:${alan}`;
+  await s.unroute('**/api/ikon-ciz');
   // pixel art çizimi: ızgara keskin SVG'ye döner, satırdaki aynı renkler tek dikdörtgen
   const svg = await s.evaluate(() => { const d = document.createElement('div'); d.innerHTML = pxSvg(['kkkkkkkkkkkk', ...Array(10).fill('kaaaabbbccck'), 'kkkkkkkkkkkk'], 'mavi', 24); return d.querySelectorAll('rect').length; });
   await s.keyboard.press('Escape'); await s.mouse.click(700, 500);
-  return { once, dugme: await s.$eval('.sy-ikon', (e) => e.textContent), sirada: durum.sirada.includes(anahtar) || durum.ciziliyor.includes(anahtar), svgDikdortgen: svg, yol: await s.$eval('#yol', (e) => e.textContent) };
+  return { once, dugme: await s.$eval('.sy-ikon', (e) => e.textContent), istendi: istek?.tarif === 'hedef tahtası' && istek?.calisma === ca, svgDikdortgen: svg, yol: await s.$eval('#yol', (e) => e.textContent) };
 });
 await adim('renk', async () => {
   await s.hover(`#rayListe [data-git="#/c/${ca}"]`); await s.waitForTimeout(300);

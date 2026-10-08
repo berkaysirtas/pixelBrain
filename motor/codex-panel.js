@@ -27,7 +27,7 @@
   // Codex'in ham hatası (İngilizce, 401, ağ ayrıntısı) kullanıcıya Türkçe ve ne yapacağıyla gider; yeni kurulumda en sık düşülen yer giriş
   const codexHatasi = (m = '') => {
     if (/\b401\b|unauthorized|not logged in/i.test(m)) return { kisa: 'Giriş yapılmamış', metin: "Codex'e giriş yapılmamış. Terminalde <code>codex login</code> çalıştır, sonra yeniden yaz." };
-    if (/429|usage limit|rate limit|quota/i.test(m)) return { kisa: 'Kullanım sınırı doldu', metin: 'Codex kullanım sınırın doldu. Sınır sıfırlanınca yeniden dene.' };
+    if (/429|usage limit|rate limit|quota/i.test(m)) return { kisa: 'Kullanım sınırı doldu', metin: 'Codex kullanım sınırın doldu. Ne zaman açılacağı ve varsa sıfırlama hakkın, alttaki kullanım göstergesinde.' };
     return { kisa: 'Tur tamamlanamadı', metin: 'Codex turu tamamlanamadı: ' + kacis(m.slice(0, 160)) };
   };
   const svg = (d) => `<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -53,6 +53,7 @@
   const ONERI = ['Bu alanı özetle', 'Notlardan bir pano çiz', 'Neyi atlıyorum?'];
   const KALEM = svg('<path d="M10.5 2.5 13.5 5.5 6 13H3v-3z"/><path d="m9 4 3 3"/>');
   const PANO = svg('<rect x="2.5" y="3" width="11" height="10" rx="1.5"/><path d="M2.5 6h11"/>');
+  const HIZLI_KATMAN = 'priority';  // ölçüm kaydındaki Fast katmanının adı (sunucu: BEYIN_HIZLI_KATMAN)
   const EFOR = { low: 'Az', medium: 'Orta', high: 'Çok', xhigh: 'Çok fazla', max: 'En çok', ultra: 'Ultra' };
   const ETIKETLI = /^\s*<([a-z_]+)>/; // mesajın yanında giden bağlam blokları: kullanıcıya gösterilmez
   // Canlı çizim (K-077): Codex panoyu cevabının içinde <pano-yaz …>…</pano-yaz> bloğuyla verir. Sohbette blok görünmez, yerine
@@ -81,6 +82,7 @@
         <div class="cx-yaz-alt">
           <div class="cx-model-kap"><button type="button" class="cx-arac cx-model" id="cxModel" title="Model, düşünme ve internet">Model</button><div class="cx-menu" id="cxMenu" hidden></div></div>
           <button type="button" class="cx-arac cx-ciz" id="cxCiz" aria-pressed="false" title="Çizim modu: Codex her mesajda konuşulanı panoya çizer, sormadan">${KALEM}<span>Çiz</span></button>
+          <button type="button" class="cx-arac cx-kota-d" id="cxKota" hidden></button>
           <span class="cx-hal"><span class="cx-nokta" id="cxNokta"></span><span id="cxDurum">Bağlanıyor…</span></span>
           <button type="button" class="cx-gonder" id="cxGonder" aria-label="Gönder" title="Gönder (⏎) · satır için ⇧⏎">${GONDER}</button></div></div>
     </div>`;
@@ -98,6 +100,7 @@
     };
     let model = depo.al('model'), efor = depo.al('efor'), ciz = !!depo.al('cizim'), baglamVeri = null, eylemVeri = null, liste = [];
     let internet = depo.al('internet') !== false;  // varsayılan açık (K-026): link ve video okunur
+    let hizli = depo.al('hizli') === true;  // Fast katmanı varsayılan kapalı (K-085): kotayı daha hızlı harcar
     const goreli = (y) => (kok && String(y).startsWith(kok + '/') ? String(y).slice(kok.length + 1) : String(y));
     const parca = new Map();
     const durum = (yazi, renk) => { kap.querySelector('#cxDurum').textContent = yazi; kap.querySelector('#cxNokta').style.background = renk; };
@@ -263,12 +266,13 @@
     const IS = { reasoning: 'Düşünüyor', agentMessage: 'Yazıyor', fileChange: 'Dosya yazıyor' };
     function olay(o) {
       const p = o.params || {};
+      if (o.method === 'account/rateLimits/updated') return void kotaYenile(false, 1500);
       if (o.method === 'beyin/kapandi') { calisiyor(false); durum('Codex kapandı · yazınca yeniden başlar', 'var(--tehlike)'); return; }
       if (o.method === 'item/completed' && p.item?.type === 'fileChange' && p.threadId === thread && hal) hal({ calisiyor: true, is, ciz, yazdi: (p.item.changes || []).map((c) => goreli(c.path || '')) });
       if (p.threadId && !thread && bekliyor) thread = p.threadId;
       if (!p.threadId || p.threadId !== thread) { if (o.method === 'beyin/istek-kapandi') { const el = parca.get('istek:' + p.istekId); if (el) { el.remove(); parca.delete('istek:' + p.istekId); } } return; }
       if (o.method === 'turn/started') { is = 'Düşünüyor'; sonHata = null; calisiyor(true); }
-      else if (o.method === 'turn/completed') { calisiyor(false); bekliyor = false; if (p.turn?.status === 'failed') turHatasi(p.turn.error?.message); else if (sonHata) durum(sonHata.kisa, 'var(--tehlike)'); }
+      else if (o.method === 'turn/completed') { calisiyor(false); bekliyor = false; kotaYenile(true); if (p.turn?.status === 'failed') turHatasi(p.turn.error?.message); else if (sonHata) durum(sonHata.kisa, 'var(--tehlike)'); }
       else if (o.method === 'error') {
         // Codex 401'de on kez yeniden dener (yarım dakika "Düşünüyor"); giriş yoksa ilk denemede söylenir ve tur durdurulur
         const e = p.error || {};
@@ -299,7 +303,7 @@
       metin.value = ''; boyla(); bekliyor = true;
       akis.querySelector('.cx-bos')?.remove();
       is = 'Gönderiliyor'; calisiyor(true);
-      const govde = { alan, metin: yazi, model, efor, internet, ciz, sayfa, panolar: baglamVeri?.panolar || [], bolge: baglamVeri?.bolge || null, eylem: eylemVeri }; // sayfa: açık not, Codex onu da okur
+      const govde = { alan, metin: yazi, model, efor, internet, hizli, ciz, sayfa, panolar: baglamVeri?.panolar || [], bolge: baglamVeri?.bolge || null, eylem: eylemVeri }; // sayfa: açık not, Codex onu da okur
       baglamYap(null); eylemVeri = null;
       try { const s = await yolla('/api/codex/gonder', govde); thread = s.thread; }
       catch (e) { bekliyor = false; metin.value = yazi; boyla(); calisiyor(false); durum('Gönderilemedi', 'var(--tehlike)'); bildir(e.message); }
@@ -322,8 +326,8 @@
     function modelCiz() {
       const m = liste.find((x) => x.id === model);
       const renk = m ? seviyeRengi(m, efor) : 'var(--yol)', ad = EFOR[efor] || efor;
-      modelDugme.innerHTML = m ? `<span class="cx-model-ad">${kacis(kisaAd(m.ad))} · <b class="cx-model-sev" style="color:${renk}">${kacis(ad)}</b></span><span class="cx-kure${internet ? ' acik' : ''}" title="İnternet ${internet ? 'açık' : 'kapalı'}">${KURE}</span>` : 'Model';
-      modelDugme.title = m ? `${m.ad} · düşünme: ${ad} · internet ${internet ? 'açık' : 'kapalı'}` : 'Model';
+      modelDugme.innerHTML = m ? `<span class="cx-model-ad">${kacis(kisaAd(m.ad))} · <b class="cx-model-sev" style="color:${renk}">${kacis(ad)}</b></span><span class="cx-kure${internet ? ' acik' : ''}" title="İnternet ${internet ? 'açık' : 'kapalı'}">${KURE}</span>${hizli ? `<span class="cx-hizli acik" title="Fast açık">${SIMSEK}</span>` : ''}` : 'Model';
+      modelDugme.title = m ? `${m.ad} · düşünme: ${ad} · internet ${internet ? 'açık' : 'kapalı'}${hizli ? ' · Fast' : ''}` : 'Model';
       if (!m) { menu.innerHTML = ''; return; }
       const t = rayYeri(m), seviye = Math.max(0, m.eforlar.indexOf(efor));
       menu.innerHTML = `<div class="cx-ds-bas"><button type="button" data-efor="${kacis(m.eforlar[0])}" title="Hızlı: ${kacis(EFOR[m.eforlar[0]] || m.eforlar[0])}">${SIMSEK}</button>
@@ -332,8 +336,52 @@
         ${listeAcik ? `<div class="cx-ds-liste">${liste.map((x) => `<button type="button" class="cx-menu-oge" data-model="${kacis(x.id)}" aria-checked="${x.id === model}" title="${kacis(x.aciklama || '')}"><b>${kacis(x.ad)}${x.varsayilan ? ' <i>varsayılan</i>' : ''}</b></button>`).join('')}</div>` : ''}
         <div class="cx-ds-ray${seviye >= m.eforlar.length - 2 && seviye >= 3 ? ' uzay' : ''}" data-ray role="slider" aria-label="Düşünme" aria-valuetext="${kacis(ad)}" tabindex="0" style="--renk:${renk}">
           <div class="cx-ds-dolu" style="width:calc(24px + (100% - 24px) * ${t.toFixed(3)})"><span>${isiltilar(Math.max(0, seviye - 1) * 6)}</span></div><span class="cx-ds-top" style="left:calc(2px + (100% - 24px) * ${t.toFixed(3)})"></span></div>
-        <button type="button" class="cx-ds-ic" data-internet role="switch" aria-checked="${internet}" title="${internet ? 'Açık: link, YouTube ve web kaynakları okunur' : 'Kapalı: yalnız bu bilgisayardaki dosyalar'}"><span class="cx-kure${internet ? ' acik' : ''}">${KURE}</span>İnternet<span class="anahtar"></span></button>`;
+        <button type="button" class="cx-ds-ic" data-internet role="switch" aria-checked="${internet}" title="${internet ? 'Açık: link, YouTube ve web kaynakları okunur' : 'Kapalı: yalnız bu bilgisayardaki dosyalar'}"><span class="cx-kure${internet ? ' acik' : ''}">${KURE}</span>İnternet<span class="anahtar"></span></button>
+        <button type="button" class="cx-ds-ic" data-hizli role="switch" aria-checked="${hizli}" title="${hizli ? 'Açık: cevap daha çabuk gelir, kota daha hızlı biter' : 'Kapalı: standart hız, kota daha uzun gider'}"><span class="cx-hizli${hizli ? ' acik' : ''}">${SIMSEK}</span>Fast<small class="cx-ds-ic-not">kota daha hızlı biter</small><span class="anahtar"></span></button>
+        ${kotaBolum()}`;
     }
+    // Kullanım sınırı (K-085): 5 saatlik pencere alttaki düğmede bir bakışta, ayrıntı seçicinin altında; tur bitince ve Codex
+    // güncelleyince yenilenir. Sıfırlama hakkı iki tıkla kullanılır: ilki sorar, ikincisi bir hakkı harcar.
+    const kotaDugme = kap.querySelector('#cxKota');
+    let kota = null, kotaSaat = null, sifirAnahtar = null;
+    const pencereAdi = (dk) => (dk >= 10080 ? 'Hafta' : dk >= 1440 ? `${Math.round(dk / 1440)} gün` : `${Math.round(dk / 60)} saat`);
+    const kotaRengi = (y) => (y >= 90 ? 'var(--tehlike)' : y >= 70 ? 'var(--r-turuncu)' : 'var(--ilke)');
+    const yenilenme = (sn) => { const t = new Date(sn * 1000); return new Date().toDateString() === t.toDateString() ? t.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : t.toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+    const cubuk = (y) => `<span class="cx-kota-cubuk"><i style="width:${y}%;background:${kotaRengi(y)}"></i></span>`;
+    function kotaYenile(zorla, gecikme = 0) {
+      clearTimeout(kotaSaat);
+      kotaSaat = setTimeout(() => fetch('/api/codex/kota' + (zorla ? '?zorla=1' : ''), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null))
+        .then((k) => { if (k) { kota = k; kotaCiz(); if (!menu.hidden) modelCiz(); } }).catch(() => {}), gecikme);
+    }
+    function kotaCiz() {
+      const w = kota?.pencereler?.[0];
+      kotaDugme.hidden = !w;
+      if (!w) return;
+      const y = Math.min(100, w.yuzde ?? 0);
+      kotaDugme.innerHTML = `${cubuk(y)}<span>%${y}</span>`;
+      kotaDugme.title = `Codex kullanımı: ${pencereAdi(w.dk)} içinde %${y}${w.sifir ? ' · yenilenme ' + yenilenme(w.sifir) : ''}`;
+      kotaDugme.classList.toggle('dolu', y >= 100);
+    }
+    function kotaBolum() {
+      if (!kota?.pencereler?.length) return '';
+      const m = kota.maliyet || {}, ayar = (m.ayar || {})[`${model}|${efor}|${hizli ? HIZLI_KATMAN : 'standart'}`];
+      const satir = (w) => { const y = Math.min(100, w.yuzde ?? 0); return `<div class="cx-kota-satir"><span>${pencereAdi(w.dk)}</span>${cubuk(y)}<b>%${y}</b><small title="Yenilenme zamanı">${w.sifir ? GERI + yenilenme(w.sifir) : ''}</small></div>`; };
+      const notlar = [ayar ? `Bu ayarla bir tur 5 saatlik kotadan ~%${ayar.ortanca} yer (${ayar.tur} ölçüm)` : '', m.son?.kota != null ? `Son tur %${m.son.kota}` : '',
+        m.arka?.tur ? `Arka plan işleri son 5 saatte %${m.arka.kota} (${m.arka.tur} iş)` : ''].filter(Boolean);
+      const sinirda = kota.pencereler.some((w) => (w.yuzde ?? 0) >= 80);
+      return `<div class="cx-kota"><div class="cx-kota-bas"><b>Kullanım</b>${kota.plan ? `<span>${kacis(kota.plan[0].toUpperCase() + kota.plan.slice(1))}</span>` : ''}</div>
+        ${kota.pencereler.map(satir).join('')}${notlar.length ? `<p class="cx-kota-not">${notlar.join(' · ')}</p>` : ''}
+        ${kota.haklar && sinirda ? `<button type="button" class="cx-kota-sifirla" data-kota-sifirla>${sifirAnahtar ? `Emin misin? ${kota.haklar} haktan biri gider` : `Sıfırlama hakkını kullan · ${kota.haklar} hak`}</button>` : ''}</div>`;
+    }
+    async function kotaSifirla() {
+      if (!sifirAnahtar) { sifirAnahtar = crypto.randomUUID?.() || String(Date.now()) + Math.random(); return void modelCiz(); }
+      try {
+        const sonuc = await yolla('/api/codex/kota-sifirla', { anahtar: sifirAnahtar });
+        bildir({ reset: 'Codex kotası sıfırlandı', nothingToReset: 'Sıfırlanacak bir şey yok, kota zaten açık', noCredit: 'Sıfırlama hakkın kalmamış', alreadyRedeemed: 'Bu sıfırlama zaten yapıldı' }[sonuc] || 'Sıfırlama denendi');
+      } catch (e) { bildir(e.message); }
+      sifirAnahtar = null; kotaYenile(true);
+    }
+    kotaDugme.onclick = () => { menu.hidden = false; listeAcik = false; modelCiz(); kotaYenile(true); };
     function modelSec(id, yeniEfor) {
       const m = liste.find((x) => x.id === id) || liste.find((x) => x.varsayilan) || liste[0];
       if (!m) return;
@@ -341,7 +389,7 @@
       depo.koy('model', model); depo.koy('efor', efor); modelCiz();
     }
     modeller = modeller || fetch('/api/codex/modeller', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
-    modeller.then((l) => { liste = Array.isArray(l) ? l : []; modelSec(model, efor); });
+    modeller.then((l) => { liste = Array.isArray(l) ? l : []; modelSec(model, efor); kotaYenile(false); });
     modelDugme.onclick = () => { menu.hidden = !menu.hidden; listeAcik = false; modelCiz(); };
     menu.onclick = (e) => {
       const m = e.target.closest('[data-model]'), f = e.target.closest('[data-efor]'), n = e.target.closest('[data-internet]'), l = e.target.closest('[data-liste]');
@@ -349,6 +397,8 @@
       if (f) modelSec(model, f.dataset.efor);
       if (l) { listeAcik = !listeAcik; modelCiz(); }
       if (n) { internet = !internet; depo.koy('internet', internet); modelCiz(); }
+      if (e.target.closest('[data-hizli]')) { hizli = !hizli; depo.koy('hizli', hizli); modelCiz(); }
+      if (e.target.closest('[data-kota-sifirla]')) kotaSifirla();
     };
     // Kaydırıcı: tıkla ya da sürükle; en yakın seviyeye oturur
     const rayaGore = (ray, x) => {

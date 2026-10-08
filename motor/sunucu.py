@@ -501,7 +501,7 @@ def _ikon_ciz(ca_id, alan_id, tarif):
     px = None
     for _ in range(2):  # ana model, orta düşünme: küçük model okunur siluet çizemedi (ölçüldü, 2026-10-04)
         try:
-            px = px_duzelt(json.loads(KOPRU.tek_tur(PX_TALIMATI, [], metin, PX_SEMA, None, 'medium', 240)).get('satirlar'))
+            px = px_duzelt(json.loads(KOPRU.tek_tur(PX_TALIMATI, [], metin, PX_SEMA, None, 'medium', 240, 'arka: ikon')).get('satirlar'))
         except (ValueError, RuntimeError, AttributeError):
             px = None
         if px:
@@ -931,7 +931,8 @@ PROGRAM_GELISTIR = [
     "Repo git'te, her değişiklik geri alınır; izin isteme.",
     "Hataları gör: `curl -s 'http://127.0.0.1:%d/api/hatalar'` (arayüz ve sunucu hataları, en yenisi sonda) ve `.durum/sunucu.log`." % PORT,
     "Kendi hızını gör (S-017): `curl -s 'http://127.0.0.1:%d/api/codex/olcum'` her turun süresi, ilk söze kadar geçen süre, adım ve "
-    "araç sayısı, giden bağlam boyu; seviyeye göre ortanca. Hızlandırma önerirken bu sayılara dayan, önce ve sonra ölç." % PORT,
+    "araç sayısı, giden bağlam boyu, turun 5 saatlik kotadan harcadığı yüzde (`kota`); seviyeye göre ortanca. Hızlandırma önerirken "
+    "bu sayılara dayan, önce ve sonra ölç; hız kotayı yiyorsa (K-085) bunu da söyle." % PORT,
     "Değiştirdikten sonra denetle: JS için `node --check <dosya>`, Python için `python3 -m py_compile <dosya>`. Tarayıcı sınamaları "
     "(node araclar/duman.mjs, sayfa-duman.mjs) sandbox'ta çalışmaz: hangisini koşmak gerektiğini cevabında söyle.",
     "JS, HTML ve CSS değişikliği sayfa yenilenince gelir; Python değişikliği (motor/*.py) sunucu yeniden başlayınca: kullanıcıya "
@@ -1295,7 +1296,7 @@ def yazi_onerisi(istek):
     if sorulan:
         ekler.append('<sorulanlar>\nBunları zaten sordun (bekliyor, onaylandı ya da reddedildi); ogrenilen listesine koyma:\n' + '\n'.join('- ' + x for x in sorulan) + '\n</sorulanlar>')
     model = next((m['id'] for m in KOPRU.modeller() if 'luna' in m['id']), None)  # hızlı model: öneri birkaç saniyede gelsin
-    cevap = KOPRU.tek_tur(ONERI_TALIMATI, ekler, 'Nota bak; değer katan öneri varsa ver, yoksa boş liste.', ONERI_SEMA, model, 'low')
+    cevap = KOPRU.tek_tur(ONERI_TALIMATI, ekler, 'Nota bak; değer katan öneri varsa ver, yoksa boş liste.', ONERI_SEMA, model, 'low', ad='arka: yazı önerisi')
     try:
         veri = json.loads(cevap)
     except ValueError:
@@ -1430,7 +1431,7 @@ def yazi_kutusu(istek):
              "Türkçe yaz, em dash ve en dash kullanma. Araç kullanma, dosya okuma: her şey mesajda. " + talimat)
     mesaj = f"<parca>\n{parca}\n</parca>" + (f"\n\nKullanıcının isteği: {str(istek.get('istek'))[:500]}" if istek.get('istek') else '')
     model = next((m['id'] for m in KOPRU.modeller() if 'luna' in m['id']), None)
-    cevap = KOPRU.tek_tur(genel, ekler, mesaj, YAZI_SEMA, model, efor)
+    cevap = KOPRU.tek_tur(genel, ekler, mesaj, YAZI_SEMA, model, efor, ad='arka: yazı eylemi')
     try:
         d = json.loads(cevap)
         return {'metin': str(d.get('metin') or '').strip(), 'kaynaklar': [str(k) for k in d.get('kaynaklar') or []][:8]}
@@ -1584,7 +1585,7 @@ def _tara():
             haric, haric_proje = gizli_haric(ca['id'])
             ekler = [b for b in (hafiza.ben_baglami(BEYIN, True),
                                  hafiza.notlar_baglami(BEYIN, metin[:1500], ca['id'] if izole else None, haric + (f"notlar/{a['id']}/",), haric_proje)) if b]
-            cevap = KOPRU.tek_tur(TARAMA_TALIMATI, ekler, f'<parca>\n{metin}\n</parca>', TARAMA_SEMA, model, 'medium')
+            cevap = KOPRU.tek_tur(TARAMA_TALIMATI, ekler, f'<parca>\n{metin}\n</parca>', TARAMA_SEMA, model, 'medium', ad='arka: tarama')
             for b in (json.loads(cevap).get('bulgular') or []):
                 bulgular.append({**b, 'alan': a['id'], 'calisma': ca['id']})
             taranan.append(a['id'])
@@ -1820,8 +1821,11 @@ def _video_ozetle(v, baslik, metin):
     izole = bool(ca and ca.get('izole'))
     haric, haric_proje = gizli_haric(ca['id'])
     ekler = [b for b in (hafiza.ben_baglami(BEYIN, True), hafiza.notlar_baglami(BEYIN, (baslik + ' ' + metin)[:1500], ca['id'] if izole else None, haric, haric_proje)) if b]
-    model = next((m['id'] for m in KOPRU.modeller() if 'luna' in m['id']), None)
-    ozet = json.loads(KOPRU.tek_tur(VIDEO_TALIMATI, ekler, f'<transkript>\n{baslik}\n{metin[:14000]}\n</transkript>', VIDEO_SEMA, model, 'low', 180)).get('ozet', '').strip()
+    if metin.strip():
+        model = next((m['id'] for m in KOPRU.modeller() if 'luna' in m['id']), None)
+        ozet = json.loads(KOPRU.tek_tur(VIDEO_TALIMATI, ekler, f'<transkript>\n{baslik}\n{metin[:14000]}\n</transkript>', VIDEO_SEMA, model, 'low', 180, 'arka: video özeti')).get('ozet', '').strip()
+    else:  # konuşmasız video: Codex yalnız bu cümleyi yazacaktı, kotadan yemesin (K-085)
+        ozet = 'Transkript alınamadı.'
     sn = v.get('sure', 0)
     sure = (f' · {sn} sn' if sn < 60 else f' · {round(sn / 60)} dk') if sn else ''
     klasor = f"ham/kaynaklar/{v['calisma']}/{v['alan']}/video/{v['vid']}"
@@ -2175,8 +2179,24 @@ def tur_receipt(ozet):
 
 KOPRU.tur_ozeti = lambda ozet: threading.Thread(target=tur_receipt, args=(ozet,), daemon=True).start()
 
-# Çizim turlarının hız katmanı (K-077): Codex'in "Fast" katmanı (priority). Boş bırakılırsa standart; Ultrafast açılırsa 'ultrafast'.
-CIZIM_KATMANI = os.environ.get('BEYIN_CIZIM_KATMANI', 'priority')
+# Hız katmanı (K-085, K-077'nin varsayılanını değiştirir): Codex'in "Fast" katmanı yalnız panelde Fast anahtarı açıkken.
+# Ölçüldü (8 Ekim, Plus): Fast ve en yüksek düşünmeyle tek tur 5 saatlik kotanın %61'ini harcadı. Ultrafast açılırsa 'ultrafast'.
+HIZLI_KATMAN = os.environ.get('BEYIN_HIZLI_KATMAN', 'priority')
+
+
+def tur_maliyeti():
+    """Ölçülmüş son turlardan (K-085): ayar başına (model|efor|katman) bir turun 5 saatlik kotadan ortanca yüzdesi, son
+    panel turu ve son 5 saatte arka plan işlerinin (yazı önerisi, tarama, video özeti, ikon) toplamı."""
+    turlar, gruplar = KOPRU.olcumler(300), {}
+    for o in turlar:
+        if 'kota' in o and not o.get('arka'):
+            gruplar.setdefault(f"{o.get('model')}|{o.get('efor')}|{o.get('katman') or 'standart'}", []).append(o['kota'])
+    sinir = zaman.strftime('%Y-%m-%dT%H:%M:%S', zaman.localtime(zaman.time() - 5 * 3600))
+    son = next((o for o in reversed(turlar) if 'kota' in o and not o.get('arka')), None)
+    arka = [o for o in turlar if o.get('arka') and o.get('zaman', '') >= sinir]
+    return {'ayar': {k: {'ortanca': sorted(l)[len(l) // 2], 'tur': len(l)} for k, l in gruplar.items()},
+            'son': son and {k: son.get(k) for k in ('kota', 'model', 'efor', 'katman', 'adim', 'zaman')},
+            'arka': {'tur': len(arka), 'kota': sum(o.get('kota') or 0 for o in arka)}}
 
 
 YERINDE = "Aynı panoyu güncelle: adı ve yeri değişmez (önceki sürüm saklandı)."
@@ -2541,6 +2561,14 @@ class Istek(BaseHTTPRequestHandler):
                 return self.gonder(200, json.dumps(KOPRU.modeller(), ensure_ascii=False).encode())
             except RuntimeError as e:
                 return self.hata(503, str(e))
+        if yol == '/api/codex/kota':
+            # Kullanım sınırı (K-085): 5 saatlik ve haftalık pencere, sıfırlama hakkı, ayar başına bir turun ölçülmüş maliyeti
+            try:
+                k = KOPRU.kota_oku(0 if 'zorla=1' in self.path else 60)
+            except RuntimeError as e:
+                return self.hata(503, str(e))
+            return self.gonder(200, json.dumps({**{a: d for a, d in k.items() if not a.startswith('_')}, 'maliyet': tur_maliyeti()},
+                                               ensure_ascii=False).encode())
         if yol == '/api/codex/olcum':
             # Tur ölçümü (S-017): son turlar ve seviyeye göre ortanca süre; Codex program alanında kendi hızına buradan bakar
             son = KOPRU.olcumler(int((parse_qs(urlparse(self.path).query).get('son') or ['40'])[0]))
@@ -2548,6 +2576,7 @@ class Istek(BaseHTTPRequestHandler):
             # Hız katmanı gelince (K-077) seviye ve katman birlikte gruplanır: Fast ve standart turlar aynı ortancaya karışmasın
             grup = lambda o: str(o.get('efor')) + ('' if o.get('katman') in (None, 'standart') else ' · ' + o['katman'])
             ozet = {e: {'tur': len(l), 'toplam_sn': ortanca([o['toplam'] for o in l]), 'ilk_soz_sn': ortanca([o['ilk_soz'] for o in l if 'ilk_soz' in o]),
+                        'kota_yuzde': ortanca([o['kota'] for o in l if 'kota' in o]),
                         'ilk_pano_sn': ortanca([o['ilk_pano'] for o in l if 'ilk_pano' in o]),
                         'adim': ortanca([o['adim'] for o in l])} for e in {grup(o) for o in son} for l in [[o for o in son if grup(o) == e]]}
             return self.gonder(200, json.dumps({'ozet': ozet, 'turlar': son}, ensure_ascii=False).encode())
@@ -2621,10 +2650,13 @@ class Istek(BaseHTTPRequestHandler):
                     ekler = tur_ekleri(istek)
                     PANO_BAGLAM[istek['alan']] = istek.get('_pano') or {}  # akış başlamadan hazır olmalı (K-077)
                     sonuc = KOPRU.gonder(istek['alan'], istek['metin'], codex_talimati(istek['alan']), ekler,
-                                         istek.get('model'), istek.get('efor'), istek.get('internet'), CIZIM_KATMANI if istek.get('ciz') else None)
+                                         istek.get('model'), istek.get('efor'), istek.get('internet'), HIZLI_KATMAN if istek.get('hizli') else None)
                     KOPRU.isaretle(istek['alan'], **istek.get('_iz', {}))
                     if kopya is not None:
                         defter_kilidi_kur(istek['alan'], sonuc['thread'], istek['metin'], kopya)
+                elif yol == '/api/codex/kota-sifirla':
+                    # Hesaptaki ücretsiz sıfırlama hakkı (K-085): yalnız kullanıcının düğmesiyle; anahtar aynı denemenin tekrarını tek sayar
+                    sonuc = KOPRU.kota_sifirla(str(istek.get('anahtar') or uuid.uuid4()))
                 elif yol == '/api/codex/oneri':
                     sonuc = yazi_onerisi(istek)
                 elif yol == '/api/codex/yazi':

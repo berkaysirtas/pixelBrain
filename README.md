@@ -130,6 +130,9 @@ yeniden kurulabilen bir indeks; notların kendisi değil) ve Node.js varsa taray
 ## Sorun giderme
 
 - **Codex paneli cevap vermiyor:** `codex login` yapıldı mı? Ayarlar › Entegrasyonlar'da Codex kartının durumuna bak.
+- **Codex kotası çabuk bitiyor:** panelin altındaki yüzde 5 saatlik pencereyi gösterir; basınca haftalık pencere, seçili
+  ayarla bir turun ölçülmüş maliyeti ve varsa sıfırlama hakkın çıkar. En büyük model, en yüksek düşünme ve Fast birlikte tek
+  turda pencerenin yarısını yiyebilir; Fast varsayılan kapalı.
 - **"Beyin kapalı" sayfası:** sunucu çalışmıyor; **Beyni Aç**'a çift tıkla.
 - **Port 4700 dolu:** `PORT=4710 ./baslat.sh` ve `http://127.0.0.1:4710`.
 - **Pano küçük resimleri yok:** Node.js kur, sonra klasörde `sh kur.sh` (eksikleri tamamlar).
