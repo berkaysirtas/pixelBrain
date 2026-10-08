@@ -27,7 +27,13 @@ Hafıza katmanı `hafiza/` paketinde; kurulumda ve güncellemede kurucusu koşar
 Kurulum kılavuzu `yayin/KURULUM.md` (ajan okur), görseller `python3 yayin/gorsel.py`, README ekranları (kurgusal
 örnekle, arayüz değişince) `python3 yayin/ekranlar.py`. Ad pixelBrain, lisans `yayin/LICENSE` (Apache 2.0 ve ek
 koşullar, K-083): Sürüm kartının altındaki ad ve telif satırı lisansın koruduğu yer, kaldırılmaz.
-Güvenlik kapısı (`sunucu.py` › `Istek.yabanci`): Host yalnız 127.0.0.1 ya da localhost; tarayıcıdan gelen yazma ve /api okuması
+Bulutta (K-086): README'deki Codespaces düğmesi `.devcontainer/` (kaynağı `yayin/devcontainer/`; Codespaces'in hazır görüntüsü,
+`hazirla.sh` kurar, `ac.sh` her açılışta arkada başlatır, `BASLA.md` karşılar). Sunucu `CODESPACES`, `CODESPACE_NAME` ve
+`GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN`'den kendi https adresini `EK_HOST`'a ekler; başka adres `BEYIN_HOSTLAR` (virgülle).
+Codex girişi bulutta `codex login --device-auth` (`CODEX_GIRIS`). Port özel kalmalı (GitHub girişi); Public yapılırsa notlar açılır.
+Kum havuzu konteynerde açılmazsa (`hazirla.sh` sınar, `.durum/codex-kum-yok`) `codex.py` `kumsuz`: thread `danger-full-access`,
+tur `externalSandbox`, izin profili yok.
+Güvenlik kapısı (`sunucu.py` › `Istek.yabanci`): Host yalnız 127.0.0.1, localhost ya da `EK_HOST`; tarayıcıdan gelen yazma ve /api okuması
 yalnız Beyin'in kendi sayfasından (başka site CSRF ile çalışma alanı açabiliyordu, sahte Host ile notlar okunabiliyordu). Yeni uç
 bu kapıdan geçer; Origin'siz istek (curl, Beyni Aç ve Kapat) geçer. Yayın GitHub denetimi (`.github/workflows/denetim.yml`,
 kaynağı `yayin/github/`) yeşil olmadan çıkmaz; güncelleyicinin sınaması `python3 araclar/guncelle-sinama.py`. Kaynak kopyada kurulum ve güncelleme reddedilir.

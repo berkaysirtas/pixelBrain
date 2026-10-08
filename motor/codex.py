@@ -31,6 +31,13 @@ def oturum_ayari(kok):
         durum = None
     return {**AYAR, 'sandbox_workspace_write': {'network_access': True, **({'writable_roots': [durum]} if durum else {})}}
 OLAY_SINIRI = 3000
+
+
+def kumsuz(durum_klasoru):
+    """Bulutta kum havuzu açılamıyor mu (K-086): Codespaces konteyneri kullanıcı ad alanına izin vermezse Codex'in bwrap'ı
+    çalışmaz ve Codex hiçbir komut çalıştıramaz. .devcontainer/hazirla.sh bunu sınar, açılmazsa .durum/codex-kum-yok yazar. O
+    zaman sınır konteynerin kendisidir (tek kullanıcılı, atılabilir makine): externalSandbox; izole alan profili uygulanamaz."""
+    return os.environ.get('CODESPACES') == 'true' and os.path.exists(os.path.join(durum_klasoru, 'codex-kum-yok'))
 OLCUM_SINIRI = 500  # .durum/codex-olcum.jsonl'da tutulan son tur sayısı (S-017)
 
 
@@ -58,6 +65,7 @@ class Kopru:
         self.olcum = {}                        # thread -> süren turun ölçümü (S-017)
         self.kota = None                       # Codex kullanım sınırı, son okunan hâli (K-085)
         self.olcum_dosyasi = os.path.join(durum_klasoru, 'codex-olcum.jsonl')
+        self.kumsuz = kumsuz(durum_klasoru)
         try:
             with open(self.gorev_dosyasi, encoding='utf-8') as f:
                 self.gorevler = json.load(f)
@@ -305,7 +313,9 @@ class Kopru:
         ayar = {'cwd': self.kok, 'developerInstructions': talimat, 'config': oturum_ayari(self.kok), **POLITIKA}
         # İzole çalışma alanı (K-079): başka çalışma alanlarının dosyaları sandbox'ta okunamaz (macOS, "Operation not permitted").
         # İzin profili eski 'sandbox' ayarıyla birlikte verilmez: eski ayar profili ezer.
-        profil = self.izin_profili(alan) if self.izin_profili else None
+        profil = self.izin_profili(alan) if self.izin_profili and not self.kumsuz else None
+        if self.kumsuz:
+            ayar['sandbox'] = 'danger-full-access'
         if profil:
             ayar.pop('sandbox', None)
             ayar['config'] = {**ayar['config'], 'default_permissions': 'beyin_izole', 'permissions': {'beyin_izole': profil}}
@@ -361,7 +371,9 @@ class Kopru:
             params['model'] = model
         if efor:
             params['effort'] = efor
-        if internet is not None and thread not in self.izoleler:
+        if self.kumsuz:
+            params['sandboxPolicy'] = {'type': 'externalSandbox', 'networkAccess': 'restricted' if internet is False else 'enabled'}
+        elif internet is not None and thread not in self.izoleler:
             yazilabilir = oturum_ayari(self.kok)['sandbox_workspace_write'].get('writable_roots') or []
             params['sandboxPolicy'] = {'type': 'workspaceWrite', 'networkAccess': bool(internet), 'writableRoots': yazilabilir}
         elif internet is False:  # izole thread'de turun sandbox'ı profili ezerdi (K-079): internet kapalıyken söz düzeyinde

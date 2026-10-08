@@ -42,3 +42,32 @@ jobs:
           python3 -c "import json; s = json.load(open('surum.json')); p = json.load(open('program.json')); assert s['surum'] == p['surum'], s; print('açıldı', s['surum'])"
           curl -sf http://127.0.0.1:4790/ | grep -q 'surum-hak'
           curl -sf -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:4790/api/kapat
+  bulut:
+    # README'deki Codespaces düğmesinin yolu (K-086): Linux'ta .devcontainer kurulumu, arkada açılış, bulut adresi ve güvenlik kapısı
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Kurulum (.devcontainer/hazirla.sh)
+        run: sh .devcontainer/hazirla.sh && test -f .beyin-version && test -d ben && codex --version
+      - name: Açılış ve güvenlik kapısı
+        env:
+          CODESPACES: 'true'
+          CODESPACE_NAME: denetim-abc
+          GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: app.github.dev
+        run: |
+          sh .devcontainer/ac.sh
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:4700/api/surum > /dev/null && break; sleep 0.5; done
+          sh .devcontainer/ac.sh
+          test "$(pgrep -fc 'motor/sunucu.py')" = 1
+          B=denetim-abc-4700.app.github.dev
+          kod() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
+          test "$(kod -H "Host: $B" -H "Origin: https://$B" http://127.0.0.1:4700/api/surum)" = 200
+          test "$(kod -H "Host: $B" http://127.0.0.1:4700/)" = 200
+          test "$(kod -H 'Host: kotu.example.com' http://127.0.0.1:4700/api/surum)" = 403
+          test "$(kod -H 'Origin: https://kotu.example.com' -H 'Content-Type: application/json' -X POST -d '{}' http://127.0.0.1:4700/api/calisma)" = 403
+          curl -sf http://127.0.0.1:4700/api/entegrasyon | grep -q 'codex login --device-auth'
+          echo "bulut yolu yeşil"

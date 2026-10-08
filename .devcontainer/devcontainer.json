@@ -1,0 +1,16 @@
+{
+  "name": "pixelBrain",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "hostRequirements": { "cpus": 2 },
+  "runArgs": ["--security-opt", "seccomp=unconfined"],
+  "waitFor": "postCreateCommand",
+  "postCreateCommand": "sh .devcontainer/hazirla.sh",
+  "postStartCommand": "sh .devcontainer/ac.sh",
+  "forwardPorts": [4700],
+  "portsAttributes": {
+    "4700": { "label": "pixelBrain", "onAutoForward": "openBrowser" }
+  },
+  "customizations": {
+    "codespaces": { "openFiles": [".devcontainer/BASLA.md"] }
+  }
+}

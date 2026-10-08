@@ -25,8 +25,9 @@
     return d.sonuc;
   };
   // Codex'in ham hatası (İngilizce, 401, ağ ayrıntısı) kullanıcıya Türkçe ve ne yapacağıyla gider; yeni kurulumda en sık düşülen yer giriş
+  const GIRIS = /\.app\.github\.dev$/.test(location.hostname) ? 'codex login --device-auth' : 'codex login';  // bulutta (K-086) cihaz koduyla
   const codexHatasi = (m = '') => {
-    if (/\b401\b|unauthorized|not logged in/i.test(m)) return { kisa: 'Giriş yapılmamış', metin: "Codex'e giriş yapılmamış. Terminalde <code>codex login</code> çalıştır, sonra yeniden yaz." };
+    if (/\b401\b|unauthorized|not logged in/i.test(m)) return { kisa: 'Giriş yapılmamış', metin: `Codex'e giriş yapılmamış. Terminalde <code>${GIRIS}</code> çalıştır, sonra yeniden yaz.` };
     if (/429|usage limit|rate limit|quota/i.test(m)) return { kisa: 'Kullanım sınırı doldu', metin: 'Codex kullanım sınırın doldu. Ne zaman açılacağı ve varsa sıfırlama hakkın, alttaki kullanım göstergesinde.' };
     return { kisa: 'Tur tamamlanamadı', metin: 'Codex turu tamamlanamadı: ' + kacis(m.slice(0, 160)) };
   };

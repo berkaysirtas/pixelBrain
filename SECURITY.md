@@ -1,6 +1,8 @@
 # Güvenlik
 
 pixelBrain yalnız kendi bilgisayarında, `127.0.0.1` adresinde çalışır; notların klasöründe kalır.
+GitHub Codespaces'te ise codespace'in özel adresinden açılır; o adresi yalnız sen görürsün (GitHub girişi). pixelBrain'de
+giriş ekranı yoktur: Ports sekmesinde portu **Public** yaparsan notların ve Codex'in herkese açılır.
 
 Bir güvenlik açığı bulduysan herkese açık issue açma. GitHub'daki
 [gizli bildirim formunu](https://github.com/berkaysirtas/pixelBrain/security/advisories/new) kullan. Bildirime sürümü,

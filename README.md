@@ -1,7 +1,7 @@
 <p align="center"><img src="gorseller/pixelbrain.svg" alt="pixelBrain" width="860"></p>
 
 <p align="center"><b>Görsel önce ikinci beyin.</b> Sen yazarsın, Codex derler ve çizer, hafıza seni hatırlar.<br>
-<sub>A visual-first second brain for macOS: notebook, canvas and Codex with persistent memory. Runs locally; your notes stay in your folder. The interface is in Turkish.</sub></p>
+<sub>A visual-first second brain for macOS, or in your browser via GitHub Codespaces: notebook, canvas and Codex with persistent memory. Your notes stay in your folder. The interface is in Turkish.</sub></p>
 
 <p align="center">
 <a href="https://github.com/berkaysirtas/pixelBrain/releases/latest"><img alt="sürüm" src="https://img.shields.io/github/v/release/berkaysirtas/pixelBrain?label=s%C3%BCr%C3%BCm&color=9065B0"></a>
@@ -9,6 +9,9 @@
 <a href="https://github.com/berkaysirtas/pixelBrain/actions/workflows/denetim.yml"><img alt="denetim" src="https://github.com/berkaysirtas/pixelBrain/actions/workflows/denetim.yml/badge.svg"></a>
 <a href="LICENSE"><img alt="pixelBrain Lisansı" src="https://img.shields.io/badge/lisans-pixelBrain%20(Apache%202.0%20%2B%20ko%C5%9Fullar)-448361"></a>
 </p>
+
+<p align="center"><a href="https://codespaces.new/berkaysirtas/pixelBrain?quickstart=1"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"></a><br>
+<sub>Kurmadan dene: tarayıcıda, kendi GitHub hesabında, ücretsiz. <a href="#bulutta-kurmadan-github-codespaces">Nasıl?</a></sub></p>
 
 Her konu bir **alan**: yazdığın Defter, Codex'in derlediği Bilgi ve düşüncenin çizildiği tuval. Sağda Codex oturur; konuşur,
 panoya çizer, notlarını okur. Altta kalıcı bir hafıza vardır: pixelBrain seni tanır, oturumlar arasında ne konuştuğunuzu
@@ -50,7 +53,21 @@ Her yere <kbd>⌘</kbd><kbd>K</kbd> ile gidilir.
 
 ## Kurulum
 
-### En kolayı: Codex ya da Claude Code kursun
+### Bulutta, kurmadan (GitHub Codespaces)
+
+Bilgisayarına hiçbir şey kurmadan, tarayıcıda. Yalnız bir GitHub hesabı ve Codex için ChatGPT hesabı gerekir.
+
+1. Yukarıdaki **Open in GitHub Codespaces** düğmesine bas, **Create codespace** de. Codespace'in varsa aynısı açılır.
+2. İlk açılış bir iki dakika sürer: pixelBrain kurulur, başlar ve kendi sekmesinde açılır. Açılmazsa alttaki **Ports**
+   sekmesinde `4700 (pixelBrain)` satırındaki küre simgesine bas.
+3. Codex'e bir kez giriş: alttaki terminalde `codex login --device-auth`, ekrandaki kodu açılan sayfada onayla.
+
+Sayfa yalnız sana açıktır (GitHub girişi ister); Ports sekmesinde portu **Public** yapma. Kişisel GitHub hesabında ayda 120
+çekirdek saati ve 15 GB ücretsiz (bu makineyle ayda 60 saat). Kullanmayınca codespace 30 dakikada durur, yeniden açınca
+pixelBrain kendiliğinden başlar. **Verin o codespace'tedir** ve GitHub 30 gün açılmayan codespace'i siler: saklamak için klasörü
+ara ara indir ya da kendi bilgisayarına kur. Hız için panoların küçük resimleri bulutta kapalı gelir.
+
+### Kendi bilgisayarına: Codex ya da Claude Code kursun
 
 1. Boş bir klasör aç (örneğin `~/pixelBrain`). Not klasörün varsa o da olur; hiçbir dosyanın üstüne yazılmaz.
 2. Klasörü [Codex](https://github.com/openai/codex) ya da [Claude Code](https://claude.com/claude-code) ile aç.
@@ -80,7 +97,7 @@ curl -fsSL https://raw.githubusercontent.com/berkaysirtas/pixelBrain/main/kur.sh
 
 | | |
 |---|---|
-| macOS | Linux'ta sınanmadı, Windows desteklenmiyor |
+| macOS | Linux'ta yalnız Codespaces kurulumu sınandı; Windows desteklenmiyor |
 | Python 3.11+ | `python3 --version`; eskiyse `brew install python@3.12` |
 | Codex CLI | Beyin'in yapay zekâsı: `npm install -g @openai/codex`, ardından `codex login` |
 | Node.js (isteğe bağlı) | Panoların küçük resimleri için; kurulum betiği gerisini halleder |

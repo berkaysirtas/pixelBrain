@@ -48,6 +48,13 @@ KOPRU = Kopru(BEYIN, DURUM)
 TR = str.maketrans('çğıöşüâîû', 'cgiosuaiu')
 RESIM = os.path.join(DURUM, 'resim')
 PORT = int(os.environ.get('PORT', '4620'))
+# Bulutta açılış (K-086): GitHub Codespaces'te sayfa Codespaces'in https adresinden gelir; o adres yalnız sahibine açık (GitHub
+# girişi), port herkese açılmadıkça. Başka bir adres (ör. Tailscale) BEYIN_HOSTLAR ile eklenir: virgülle, "ad:port" ya da "ad".
+BULUT = os.environ.get('CODESPACES') == 'true'
+EK_HOST = tuple(h.strip() for h in os.environ.get('BEYIN_HOSTLAR', '').split(',') if h.strip()) + (
+    (f"{os.environ['CODESPACE_NAME']}-{PORT}.{os.environ['GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN']}",)
+    if os.environ.get('CODESPACE_NAME') and os.environ.get('GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN') else ())
+CODEX_GIRIS = 'codex login --device-auth' if BULUT else 'codex login'  # bulutta tarayıcı yönlendirmesi bu makineye dönemez
 TOPLU = 30  # bir resim.mjs koşusunda en çok pano
 AD = re.compile(r'^[A-Za-z0-9_][A-Za-z0-9_.-]*$')
 TUR = {'.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -614,14 +621,19 @@ def entegrasyonlar(tazele=False):
     # Yeni kurulumda kullanıcı ne yapacağını görsün: kurulu değil ve giriş yok durumları çözümüyle yazılır, ham hata ayrıntıya ANSI'siz gider
     sonuc.append({'ad': 'codex', 'baslik': 'Codex', 'durum': 'yok' if kod != 0 else 'uyari' if not girisli else 'bagli' if bagli else 'yarim',
                   'ozet': 'Kurulu değil' if kod != 0 else 'Giriş yok' if not girisli else 'Bağlı' if bagli else 'Hazır, alan açınca başlar',
-                  'aciklama': 'Terminalde: npm install -g @openai/codex, sonra codex login' if kod != 0
-                  else 'Terminalde: codex login' if not girisli else surum.splitlines()[0] + f" · {len(KOPRU.gorevler)} alan konuşması",
-                  'ayrinti': re.sub(r'\x1b\[[0-9;]*m', '', KOPRU.hata) or 'hata yok', 'eylem': ['kontrol', 'Kontrol et']})
+                  'aciklama': 'Terminalde: npm install -g @openai/codex, sonra ' + CODEX_GIRIS if kod != 0
+                  else 'Terminalde: ' + CODEX_GIRIS if not girisli else surum.splitlines()[0] + f" · {len(KOPRU.gorevler)} alan konuşması",
+                  'ayrinti': (re.sub(r'\x1b\[[0-9;]*m', '', KOPRU.hata) or 'hata yok') + (' · kum havuzu açılmadı, sınır codespace' if KOPRU.kumsuz else ''),
+                  'eylem': ['kontrol', 'Kontrol et']})
     kod_gh, gh = _komut(['gh', 'auth', 'status'])
     hesap = re.search(r'account (\S+)', gh)
     _, uzak = _komut(['git', 'remote', '-v'])
     gh_uzak = re.search(r'github\.com[:/]([^\s]+?)(?:\.git)?\s', uzak + ' ')
-    if gh_uzak:
+    if gh_uzak and gh_uzak.group(1).lower() == str(guncelle.program_oku(BEYIN).get('depo') or '').lower():
+        # pixelBrain'in kendi deposunun klonu (Codespaces, K-086): notlar git'e girmez, hiçbir yere yedeklenmez
+        g = {'durum': 'yarim', 'ozet': 'Yedek yok', 'aciklama': "Bu klasör pixelBrain'in kendi deposu; notların yedeklenmiyor",
+             'ayrinti': 'git remote: ' + gh_uzak.group(1) + ' (program deposu)', 'eylem': None}
+    elif gh_uzak:
         g = {'durum': 'bagli', 'ozet': 'Bağlı', 'aciklama': f'{gh_uzak.group(1)} deposuna yedekleniyor', 'ayrinti': 'git remote: ' + gh_uzak.group(1), 'eylem': ['github-ac', "GitHub'da aç"]}
     elif kod_gh == 0:
         g = {'durum': 'yarim', 'ozet': 'Giriş var, repo bağlı değil', 'aciklama': f'{hesap.group(1) if hesap else "hesap"} olarak girişli; bu beyin henüz yedeklenmiyor',
@@ -2413,10 +2425,10 @@ class Istek(BaseHTTPRequestHandler):
         karşı); tarayıcıdan gelen yazma istekleri ve /api okumaları yalnız Beyin'in kendi sayfasından (CSRF'ye karşı). Origin'siz
         istekler (curl, Beyni Aç ve Kapat, sınamalar) tarayıcı dışıdır, geçer."""
         kendi = (f'127.0.0.1:{PORT}', f'localhost:{PORT}')
-        if self.headers.get('Host', '') not in kendi:
+        if self.headers.get('Host', '') not in kendi + EK_HOST:
             return True
         koken = self.headers.get('Origin')
-        if koken is not None and koken not in tuple('http://' + k for k in kendi):
+        if koken is not None and koken not in tuple('http://' + k for k in kendi + EK_HOST) + tuple('https://' + k for k in EK_HOST):
             return True
         return (yazma or self.path.startswith('/api/')) and self.headers.get('Sec-Fetch-Site') == 'cross-site'
 
