@@ -12,6 +12,7 @@ import os
 import shutil
 import sys
 import tempfile
+import time
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'motor'))
@@ -25,7 +26,8 @@ def bekle(kosul, ad):
         hatalar.append(ad)
 
 
-BES, HAFTA = 1791476457, 1792063257
+BES = int(time.time()) + 3600  # sıfırlanma zamanları ileride: sabit tarih geçince önbellek bayat sayılıyordu
+HAFTA = BES + 586800
 OKUMA = {'rateLimits': {'limitId': 'codex', 'planType': 'plus', 'primary': {'usedPercent': 16, 'windowDurationMins': 10080, 'resetsAt': HAFTA},
                         'secondary': {'usedPercent': 40, 'windowDurationMins': 300, 'resetsAt': BES}},
          'rateLimitResetCredits': {'credits': [{'status': 'available'}, {'status': 'available'}, {'status': 'redeemed'}]}}

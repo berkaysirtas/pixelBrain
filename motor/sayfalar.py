@@ -41,11 +41,20 @@ def _yol(kok, kimlik):
     return duz
 
 
+ON_BILGI = re.compile(r'^(id|kind|title|parent|alan|ana|bilgi|created_at|updated_at):')
+
+
 def _ayir(metin):
     alanlar, govde = {}, metin
     if metin.startswith('---\n'):
         bas, _, govde = metin[4:].partition('\n---')
-        for satir in bas.splitlines():
+        satirlar = bas.splitlines()
+        if any(s.strip() and not ON_BILGI.match(s) for s in satirlar):
+            # Codex gövdeyi ilk '---' satırının altına yazmışsa ön bilgi metnin sonunda kalır: anahtar satırları ön bilgi,
+            # gerisi gövde; sayfa bir sonraki kayıtta düzgün yazılır.
+            govde = '\n' + '\n'.join(s for s in satirlar if not ON_BILGI.match(s)).strip('\n') + govde
+            satirlar = [s for s in satirlar if ON_BILGI.match(s)]
+        for satir in satirlar:
             k, ayrac, v = satir.partition(':')
             if ayrac and k.strip():
                 v = v.strip()

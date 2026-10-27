@@ -1179,7 +1179,7 @@ def yazma_kurali(alan):
     bilgi = os.path.relpath(sayfalar._yol(BEYIN, sayfalar.bilgi_not(BEYIN, a['id'], a['ad'])['id']), BEYIN)
     return (f"<yazma_kurali>\nDefter ({defter}) kullanıcınındır: kendiliğinden yazma, değiştirme, ekleme; yalnız kullanıcı bu mesajda açıkça "
             f"\"Defter'e yaz\" derse; izinsiz değişiklik turun sonunda kendiliğinden geri alınır. Bütün çıktın (özet, kümeler, veri yorumu, değerlendirme, araştırma) alanın Bilgi sayfasına gider: "
-            f"{bilgi}. Bilgi'yi ## başlıklarla bölünmüş, kaynaklı ve güncel tut; eskiyeni düzelt, tekrarı birleştir. Ön bilgiyi (--- arası) koru.\n</yazma_kurali>")
+            f"{bilgi}. Bilgi'yi ## başlıklarla bölünmüş, kaynaklı ve güncel tut; eskiyeni düzelt, tekrarı birleştir. Ön bilgiyi (iki --- satırı arası) koru; metni ikinci --- satırının altına yaz.\n</yazma_kurali>")
 
 
 # Defter kilidi (K-066, K-038'in zorunlu hâli): Codex turu Defter'e kendiliğinden dokunamaz. Tur başlarken alanın Defter
